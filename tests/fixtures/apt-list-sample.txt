@@ -1,0 +1,10 @@
+Listing...
+3cpio/resolute,now 0.14.0-1ubuntu1 amd64 [installed,automatic]
+7zip/resolute,now 26.00+dfsg-1 amd64 [installed,automatic]
+accountsservice/resolute-updates,resolute-security,now 23.13.9-8ubuntu5.2 amd64 [installed,automatic]
+acl/resolute,now 2.3.2-2 amd64 [installed,automatic]
+acpid/resolute,now 1:2.0.34-1ubuntu3 amd64 [installed]
+adduser/resolute,resolute,now 3.153ubuntu1 all [installed,automatic]
+demo-tool/noble,now 1.2.3-1 amd64 [installed]
+demo-lib/noble-updates,noble-security,now 1.2.3-1 amd64 [installed,automatic]
+other-pkg/noble,now 9.9.9-1 amd64 [installed]

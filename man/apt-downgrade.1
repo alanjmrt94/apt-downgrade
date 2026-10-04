@@ -1,0 +1,57 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.0.0" "User Commands"
+.SH NAME
+apt-downgrade \- downgrade installed packages to a target version
+.SH SYNOPSIS
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH DESCRIPTION
+.B apt-downgrade
+lists installed packages that match an exact version
+(\fB\-\-current\fR), then proposes an
+.B apt install
+command pinning those packages to
+.IR target .
+.PP
+Listing and
+.B \-\-dry\-run
+do not require root. Applying the install requires root privileges.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Show usage information.
+.TP
+.B \-\-current \fIversion\fR
+Installed package version to match exactly.
+.TP
+.B \-\-downgrade \fItarget\fR
+Target version for the generated apt install command.
+.TP
+.B \-\-dry\-run
+Show matching packages and the command without installing.
+.TP
+.BR \-y ", " \-\-yes
+Skip the interactive confirmation prompt.
+.SH EXIT STATUS
+.TP
+.B 0
+Success, cancellation by the user, or no matching packages.
+.TP
+.B 1
+Invalid arguments, failed listing, failed confirmation read, missing root for install, or apt failure.
+.SH ENVIRONMENT
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Override the command used to list installed packages (mainly for tests).
+.SH EXAMPLES
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH SEE ALSO
+.BR apt (8),
+.BR dpkg (1)
+.SH AUTHOR
+alanjmrt94 <alanjmartinez94@gmail.com>
