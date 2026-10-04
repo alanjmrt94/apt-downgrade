@@ -1,0 +1,42 @@
+# Build
+build/
+*.o
+*.a
+*.so
+*.out
+
+# Paquetes y artefactos Debian
+*.deb
+*.dsc
+*.changes
+*.build
+*.buildinfo
+*.tar.gz
+*.tar.xz
+*.upload
+debian/files
+debian/.debhelper/
+debian/apt-downgrade/
+debian/apt-downgrade.substvars
+debian/debhelper-build-stamp
+debian/tmp/
+*.ddeb
+
+# Tests / temporales
+/tmp/
+*.log
+
+# Editor e IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Cursor (local)
+.cursor/
+
+# Entorno
+.env
+.env.*
