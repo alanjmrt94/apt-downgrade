@@ -1,0 +1,190 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+
+jobs:
+  lint:
+    name: Lint & metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: shellcheck
+        run: |
+          shellcheck --version
+          shellcheck -x tests/run_tests.sh scripts/ppa-release-series.sh scripts/ci-check-metadata.sh
+
+      - name: bash -n
+        run: |
+          bash -n tests/run_tests.sh
+          bash -n scripts/ppa-release-series.sh
+          bash -n scripts/ci-check-metadata.sh
+
+      - name: Metadata consistency
+        run: |
+          chmod +x scripts/ci-check-metadata.sh
+          ./scripts/ci-check-metadata.sh
+
+  build-test:
+    name: Build/test (${{ matrix.compiler }} / ${{ matrix.os }})
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang
+
+      - name: Build with -Werror
+        run: make clean build CC=${{ matrix.compiler }} CFLAGS="-Wall -Wextra -O2 -Werror"
+
+      - name: Unit/fixture tests
+        run: make test CC=${{ matrix.compiler }} CFLAGS="-Wall -Wextra -O2 -Werror"
+
+      - name: Smoke dry-run against real apt list
+        run: |
+          ver="$(apt list --installed 2>/dev/null | awk -F' ' '/\/.*,now /{print $2; exit}')"
+          echo "Using installed version: ${ver}"
+          test -n "${ver}"
+          ./build/apt-downgrade --current "${ver}" --downgrade 0.0.0-ci --dry-run | tee /tmp/dry-run.txt
+          grep -q "Modo dry-run" /tmp/dry-run.txt
+          grep -q "sudo apt install" /tmp/dry-run.txt
+
+  package:
+    name: Package & lintian
+    needs: build-test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential debhelper lintian dpkg-dev devscripts
+
+      - name: make package (offline path)
+        run: |
+          make package
+          deb="$(ls apt-downgrade_*.deb)"
+          dpkg-deb -I "$deb"
+          dpkg-deb -c "$deb"
+          dpkg-deb -x "$deb" /tmp/apt-downgrade-pkg
+          /tmp/apt-downgrade-pkg/usr/bin/apt-downgrade --help | grep -q -- "--dry-run"
+          lintian --fail-on error,warning \
+            --suppress-tags initial-upload-closes-no-bugs \
+            "$deb"
+
+      - name: debhelper binary build + lintian
+        run: |
+          dpkg-buildpackage -us -uc -b
+          changes="$(ls ../apt-downgrade_*_amd64.changes)"
+          lintian --fail-on error,warning \
+            --suppress-tags initial-upload-closes-no-bugs \
+            "$changes"
+
+      - name: Source package (unsigned)
+        run: |
+          make deb-src
+          test -f ../apt-downgrade_1.0.0-1.dsc
+          test -f ../apt-downgrade_1.0.0-1.tar.xz
+          test -f ../apt-downgrade_1.0.0-1_source.changes
+          grep -q "Distribution: resolute" ../apt-downgrade_1.0.0-1_source.changes
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apt-downgrade-packages
+          path: |
+            apt-downgrade_*.deb
+            ../apt-downgrade_*.deb
+            ../apt-downgrade_*.dsc
+            ../apt-downgrade_*.tar.xz
+            ../apt-downgrade_*_source.changes
+            ../apt-downgrade_*_amd64.changes
+          if-no-files-found: error
+
+  distro-matrix:
+    name: Distro ${{ matrix.distro }}
+    needs: lint
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: focal
+            image: ubuntu:20.04
+          - distro: jammy
+            image: ubuntu:22.04
+          - distro: noble
+            image: ubuntu:24.04
+          - distro: plucky
+            image: ubuntu:25.04
+          - distro: questing
+            image: ubuntu:25.10
+          - distro: resolute
+            image: ubuntu:26.04
+    container:
+      image: ${{ matrix.image }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps (${{ matrix.distro }})
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential debhelper make ca-certificates dpkg-dev
+
+      - name: Build & test
+        run: make clean test CFLAGS="-Wall -Wextra -O2 -Werror"
+
+      - name: Local .deb
+        run: |
+          make package
+          dpkg-deb -I apt-downgrade_*.deb
+          dpkg-deb -x apt-downgrade_*.deb /tmp/pkg
+          /tmp/pkg/usr/bin/apt-downgrade --help
+
+      - name: Source package for series
+        run: |
+          version="$(sed -n 's/^VERSION[[:space:]]*=[[:space:]]*//p' Makefile | head -1 | tr -d '[:space:]')"
+          deb_version="$(sed -n 's/^DEB_VERSION[[:space:]]*=[[:space:]]*//p' Makefile | head -1 | tr -d '[:space:]')"
+          pkg_version="${version}-${deb_version}~${{ matrix.distro }}1"
+          cp debian/changelog /tmp/changelog.bak
+          {
+            echo "apt-downgrade (${pkg_version}) ${{ matrix.distro }}; urgency=medium"
+            echo
+            echo "  * CI build for ${{ matrix.distro }}."
+            echo
+            echo " -- alanjmrt94 <alanjmartinez94@gmail.com>  $(date -R)"
+          } > debian/changelog
+          dpkg-buildpackage -S -us -uc
+          test -f "../apt-downgrade_${pkg_version}.dsc"
+          grep -q "Distribution: ${{ matrix.distro }}" "../apt-downgrade_${pkg_version}_source.changes"
+          cp /tmp/changelog.bak debian/changelog
