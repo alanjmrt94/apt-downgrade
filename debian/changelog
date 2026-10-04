@@ -1,0 +1,8 @@
+apt-downgrade (1.0.0-1) resolute; urgency=medium
+
+  * Initial release.
+  * CLI with --help, --dry-run and --yes.
+  * Packaged for PPA ppa:alanjmrt94/ubuntu-tools.
+  * Compatible with Ubuntu 20.04–26.x (upload one package per series).
+
+ -- alanjmrt94 <alanjmartinez94@gmail.com>  Sat, 03 Oct 2026 22:32:00 -0300

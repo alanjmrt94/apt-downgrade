@@ -1,0 +1,17 @@
+Source: apt-downgrade
+Section: admin
+Priority: optional
+Maintainer: alanjmrt94 <alanjmartinez94@gmail.com>
+Build-Depends: debhelper (>= 12), gcc, make
+Standards-Version: 4.6.0
+Homepage: https://launchpad.net/~alanjmrt94/+archive/ubuntu/ubuntu-tools
+
+Package: apt-downgrade
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Downgrade installed packages on Ubuntu/Debian
+ Command-line tool to find installed packages matching an exact
+ version and downgrade them to a target version via apt.
+ .
+ Supports --dry-run and interactive confirmation before applying
+ changes. Builds on Ubuntu 20.04 (focal) through 26.x (resolute).
