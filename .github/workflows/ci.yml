@@ -21,7 +21,7 @@ jobs:
     name: Lint & metadata
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install tools
         run: |
@@ -54,7 +54,7 @@ jobs:
         os: [ubuntu-22.04, ubuntu-24.04]
         compiler: [gcc, clang]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install toolchain
         run: |
@@ -75,13 +75,17 @@ jobs:
           APT_DOWNGRADE_LANG=en ./build/apt-downgrade --current "${ver}" --downgrade 0.0.0-ci --dry-run | tee /tmp/dry-run.txt
           grep -q "Dry-run mode" /tmp/dry-run.txt
           grep -q "sudo apt install" /tmp/dry-run.txt
+          APT_DOWNGRADE_LANG=en ./build/apt-downgrade --current "${ver}" --downgrade 0.0.0-ci --json | tee /tmp/plan.json
+          grep -q '"current"' /tmp/plan.json
+          grep -q '"packages"' /tmp/plan.json
+          grep -q '"command"' /tmp/plan.json
 
   package:
     name: Package & lintian
     needs: build-test
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install packaging tools
         run: |
@@ -96,6 +100,10 @@ jobs:
           dpkg-deb -c "$deb"
           dpkg-deb -x "$deb" /tmp/apt-downgrade-pkg
           /tmp/apt-downgrade-pkg/usr/bin/apt-downgrade --help | grep -q -- "--dry-run"
+          /tmp/apt-downgrade-pkg/usr/bin/apt-downgrade --help | grep -q -- "--json"
+          test -f /tmp/apt-downgrade-pkg/usr/share/man/man1/apt-downgrade.1.gz
+          test -f /tmp/apt-downgrade-pkg/usr/share/man/es/man1/apt-downgrade.1.gz
+          test -f /tmp/apt-downgrade-pkg/usr/share/man/ja/man1/apt-downgrade.1.gz
           lintian --fail-on error,warning \
             --suppress-tags initial-upload-closes-no-bugs \
             "$deb"
@@ -118,9 +126,16 @@ jobs:
           test -f "dist/apt-downgrade_${full}.tar.xz"
           test -f "dist/apt-downgrade_${full}_source.changes"
           grep -q "Distribution: resolute" "dist/apt-downgrade_${full}_source.changes"
+          # El tarball PPA no debe incluir scripts/ ni tests/
+          if tar -tf "dist/apt-downgrade_${full}.tar.xz" | grep -E '(^|/)(scripts|tests)(/|$)'; then
+            echo "FAIL: source tarball must not contain scripts/ or tests/"
+            exit 1
+          fi
+          tar -tf "dist/apt-downgrade_${full}.tar.xz" | grep -q 'man/es/man1/apt-downgrade.1'
+          tar -tf "dist/apt-downgrade_${full}.tar.xz" | grep -q 'src/i18n.c'
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: apt-downgrade-packages
           path: |
@@ -156,7 +171,7 @@ jobs:
       image: ${{ matrix.image }}
       options: --user root
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install build deps (${{ matrix.distro }})
         run: |
