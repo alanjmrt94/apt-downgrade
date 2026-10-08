@@ -13,9 +13,10 @@ LAUNCHPAD_PPA ?= ppa:alanjmrt94/ubuntu-tools
 # Directorios
 SRC_DIR = src
 BUILD_DIR = build
+DIST_DIR = dist
 DEBIAN_DIR = debian
 DESTDIR ?=
-# dpkg-buildpackage deja artefactos en el directorio padre
+# dpkg-buildpackage siempre deja artefactos en el directorio padre del source tree
 PARENT_DIR = ..
 
 # Compilador
@@ -32,8 +33,9 @@ BINDIR = $(PREFIX)/bin
 # Ubuntu 20.04 → 26.x (LTS + intermedias + 26.04). Override: SERIES="jammy noble"
 PPA_SERIES ?= focal jammy noble plucky questing resolute
 
-.PHONY: all clean build package install uninstall test \
-	deb-src sign upload ppa-release ppa-series ppa-series-upload load-ppa-env
+.PHONY: all clean clean-build build package install uninstall test \
+	deb deb-src sign upload ppa-release ppa-series ppa-series-upload \
+	load-ppa-env gather-dist
 
 all: build
 
@@ -43,7 +45,26 @@ $(TARGET): $(SOURCES)
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES) $(LDFLAGS)
 
-clean:
+# Mueve artefactos de dpkg-buildpackage (padre) a dist/
+gather-dist:
+	@mkdir -p $(DIST_DIR)
+	@moved=0; \
+	for f in $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)* \
+		$(PARENT_DIR)/$(PACKAGE_NAME)-dbgsym_$(VERSION)*; do \
+		[ -e "$$f" ] || continue; \
+		mv -f "$$f" $(DIST_DIR)/; \
+		moved=1; \
+	done; \
+	if [ "$$moved" -eq 0 ]; then \
+		echo "No se encontraron artefactos en $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*"; \
+		exit 1; \
+	fi; \
+	echo "Artefactos en $(DIST_DIR)/:"; \
+	ls -1 $(DIST_DIR)/$(PACKAGE_NAME)_$(VERSION)* \
+		$(DIST_DIR)/$(PACKAGE_NAME)-dbgsym_$(VERSION)* 2>/dev/null || true
+
+# Limpia build y restos en raíz/padre; no toca dist/ (para encadenar package→deb→deb-src)
+clean-build:
 	rm -rf $(BUILD_DIR)
 	rm -f *.deb
 	rm -f $(PACKAGE_NAME)_*.deb
@@ -54,20 +75,28 @@ clean:
 	rm -f $(PACKAGE_NAME)_*.build
 	rm -f $(PACKAGE_NAME)_*.buildinfo
 	rm -f $(PACKAGE_NAME)_*.upload
+	rm -f $(PACKAGE_NAME)_*.ddeb
 	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*.tar.*
 	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*.dsc
-	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*_source.changes
-	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*_source.buildinfo
+	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*.changes
+	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*.buildinfo
 	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*.upload
+	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*.deb
+	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)*.ddeb
+	rm -f $(PARENT_DIR)/$(PACKAGE_NAME)-dbgsym_$(VERSION)*.ddeb
+
+clean: clean-build
+	rm -rf $(DIST_DIR)
 
 test: build
 	@chmod +x tests/run_tests.sh
 	./tests/run_tests.sh
 
 # Construir paquete .deb local (sin dh; útil offline)
-package: clean build
+package: clean-build build
 	@echo "Construyendo paquete .deb..."
 	@rm -rf $(BUILD_DIR)/package
+	@mkdir -p $(DIST_DIR)
 	@install -d -m 755 $(BUILD_DIR)/package/usr/bin
 	@install -d -m 755 $(BUILD_DIR)/package/usr/share/man/man1
 	@install -d -m 755 $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)
@@ -95,8 +124,14 @@ package: clean build
 		echo " version and downgrade them to a target version via apt."; \
 	} > $(BUILD_DIR)/package/DEBIAN/control
 	@cd $(BUILD_DIR)/package && find usr -type f -exec md5sum {} \; > DEBIAN/md5sums
-	@dpkg-deb --root-owner-group --build $(BUILD_DIR)/package $(PACKAGE_NAME)_$(FULL_VERSION)_amd64.deb
-	@echo "Paquete creado: $(PACKAGE_NAME)_$(FULL_VERSION)_amd64.deb"
+	@dpkg-deb --root-owner-group --build $(BUILD_DIR)/package $(DIST_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)_amd64.deb
+	@echo "Paquete creado: $(DIST_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)_amd64.deb"
+
+# Paquete binario con debhelper (artefactos en dist/; sin firmar)
+deb: clean-build load-ppa-env
+	@echo "Construyendo paquete binario $(FULL_VERSION)..."
+	dpkg-buildpackage -b -us -uc
+	@$(MAKE) gather-dist
 
 install: build
 	install -d $(DESTDIR)$(BINDIR)
@@ -112,26 +147,28 @@ load-ppa-env:
 		echo "Aviso: no se encontró ubuntu-tools.env; usando defaults del Makefile"; \
 	fi
 
-# Paquete fuente para Launchpad (sin firmar)
-deb-src: clean load-ppa-env
+# Paquete fuente para Launchpad (sin firmar) → dist/
+deb-src: clean-build load-ppa-env
 	@echo "Preparando paquete fuente para $(LAUNCHPAD_PPA) (serie: resolute)..."
 	dpkg-buildpackage -S -us -uc
-	@echo "Artefactos en $(PARENT_DIR)/:"
-	@ls -1 $(PARENT_DIR)/$(PACKAGE_NAME)_$(VERSION)* $(PARENT_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)* 2>/dev/null || true
+	@$(MAKE) gather-dist
 
-# Firmar .changes / .dsc (pide passphrase de GPG si aplica)
+# Firmar .changes / .dsc en dist/ (pide passphrase de GPG si aplica)
 sign: load-ppa-env
 	@key="$(DEBSIGN_KEYID)"; \
 	if [ -f "$(SHARED_KEYS)/launchpad/ubuntu-tools.env" ]; then \
 		set -a; . "$(SHARED_KEYS)/launchpad/ubuntu-tools.env"; set +a; \
 		key="$$DEBSIGN_KEYID"; \
 	fi; \
-	changes="$(PARENT_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)_source.changes"; \
+	changes="$(DIST_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)_source.changes"; \
 	if [ ! -f "$$changes" ]; then \
-		echo "No existe $$changes — ejecutá 'make deb-src' primero."; \
+		changes="$(DIST_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)_amd64.changes"; \
+	fi; \
+	if [ ! -f "$$changes" ]; then \
+		echo "No existe .changes en $(DIST_DIR)/ — ejecutá 'make deb-src' o 'make deb' primero."; \
 		exit 1; \
 	fi; \
-	echo "Firmando con $$key ..."; \
+	echo "Firmando $$changes con $$key ..."; \
 	debsign -k "$$key" "$$changes"
 
 # Subir al PPA (requiere firma previa)
@@ -141,7 +178,7 @@ upload: load-ppa-env
 		set -a; . "$(SHARED_KEYS)/launchpad/ubuntu-tools.env"; set +a; \
 		ppa="$$LAUNCHPAD_PPA"; \
 	fi; \
-	changes="$(PARENT_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)_source.changes"; \
+	changes="$(DIST_DIR)/$(PACKAGE_NAME)_$(FULL_VERSION)_source.changes"; \
 	if [ ! -f "$$changes" ]; then \
 		echo "No existe $$changes — ejecutá 'make deb-src' y 'make sign' primero."; \
 		exit 1; \
