@@ -91,7 +91,7 @@ jobs:
       - name: make package (offline path)
         run: |
           make package
-          deb="$(ls apt-downgrade_*.deb)"
+          deb="$(ls dist/apt-downgrade_*.deb)"
           dpkg-deb -I "$deb"
           dpkg-deb -c "$deb"
           dpkg-deb -x "$deb" /tmp/apt-downgrade-pkg
@@ -102,8 +102,8 @@ jobs:
 
       - name: debhelper binary build + lintian
         run: |
-          dpkg-buildpackage -us -uc -b
-          changes="$(ls ../apt-downgrade_*_amd64.changes)"
+          make deb
+          changes="$(ls dist/apt-downgrade_*_amd64.changes)"
           lintian --fail-on error,warning \
             --suppress-tags initial-upload-closes-no-bugs \
             "$changes"
@@ -111,22 +111,22 @@ jobs:
       - name: Source package (unsigned)
         run: |
           make deb-src
-          test -f ../apt-downgrade_1.0.0-1.dsc
-          test -f ../apt-downgrade_1.0.0-1.tar.xz
-          test -f ../apt-downgrade_1.0.0-1_source.changes
-          grep -q "Distribution: resolute" ../apt-downgrade_1.0.0-1_source.changes
+          test -f dist/apt-downgrade_1.0.0-1.dsc
+          test -f dist/apt-downgrade_1.0.0-1.tar.xz
+          test -f dist/apt-downgrade_1.0.0-1_source.changes
+          grep -q "Distribution: resolute" dist/apt-downgrade_1.0.0-1_source.changes
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: apt-downgrade-packages
           path: |
-            apt-downgrade_*.deb
-            ../apt-downgrade_*.deb
-            ../apt-downgrade_*.dsc
-            ../apt-downgrade_*.tar.xz
-            ../apt-downgrade_*_source.changes
-            ../apt-downgrade_*_amd64.changes
+            dist/apt-downgrade_*.deb
+            dist/apt-downgrade_*.dsc
+            dist/apt-downgrade_*.tar.xz
+            dist/apt-downgrade_*_source.changes
+            dist/apt-downgrade_*_amd64.changes
+            dist/apt-downgrade_*.buildinfo
           if-no-files-found: error
 
   distro-matrix:
@@ -167,8 +167,8 @@ jobs:
       - name: Local .deb
         run: |
           make package
-          dpkg-deb -I apt-downgrade_*.deb
-          dpkg-deb -x apt-downgrade_*.deb /tmp/pkg
+          dpkg-deb -I dist/apt-downgrade_*.deb
+          dpkg-deb -x dist/apt-downgrade_*.deb /tmp/pkg
           /tmp/pkg/usr/bin/apt-downgrade --help
 
       - name: Source package for series
@@ -184,7 +184,13 @@ jobs:
             echo
             echo " -- alanjmrt94 <alanjmartinez94@gmail.com>  $(date -R)"
           } > debian/changelog
+          mkdir -p dist
           dpkg-buildpackage -S -us -uc
-          test -f "../apt-downgrade_${pkg_version}.dsc"
-          grep -q "Distribution: ${{ matrix.distro }}" "../apt-downgrade_${pkg_version}_source.changes"
+          shopt -s nullglob
+          for f in "../apt-downgrade_${pkg_version}"*; do
+            mv -f "$f" dist/
+          done
+          shopt -u nullglob
+          test -f "dist/apt-downgrade_${pkg_version}.dsc"
+          grep -q "Distribution: ${{ matrix.distro }}" "dist/apt-downgrade_${pkg_version}_source.changes"
           cp /tmp/changelog.bak debian/changelog

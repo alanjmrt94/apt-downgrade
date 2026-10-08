@@ -51,12 +51,14 @@ if ! grep -qi "MIT License" LICENSE; then
   fail=1
 fi
 
-# Script must resolve the same VERSION as Makefile
+# Misma lectura que usa el script de PPA cuando no hay VERSION en el entorno
+# shellcheck disable=SC2016 # comillas simples a propósito: expandir dentro del bash -c hijo
 script_version="$(
-  VERSION= DEB_VERSION= bash -c '
-    source /dev/null
+  env -u VERSION -u DEB_VERSION bash -c '
     makefile_var() { sed -n "s/^${1}[[:space:]]*=[[:space:]]*//p" Makefile | head -1 | tr -d "[:space:]"; }
-    echo "$(makefile_var VERSION)-$(makefile_var DEB_VERSION)"
+    v="$(makefile_var VERSION)"
+    d="$(makefile_var DEB_VERSION)"
+    printf "%s-%s\n" "$v" "$d"
   '
 )"
 if [[ "$script_version" != "$FULL" ]]; then

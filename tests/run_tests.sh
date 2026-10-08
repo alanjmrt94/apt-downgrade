@@ -14,6 +14,8 @@ if [[ ! -x "$BIN" ]]; then
   exit 1
 fi
 
+# Invocada vía trap EXIT (shellcheck no lo ve como reachable)
+# shellcheck disable=SC2317,SC2329
 cleanup() {
   rm -f "$OUT" "$ERR"
 }
