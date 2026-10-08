@@ -189,6 +189,8 @@ jobs:
           /tmp/pkg/usr/bin/apt-downgrade --help
 
       - name: Source package for series
+        # Contenedores usan /bin/sh (dash); evitar bashismos como shopt.
+        shell: bash
         run: |
           version="$(sed -n 's/^VERSION[[:space:]]*=[[:space:]]*//p' Makefile | head -1 | tr -d '[:space:]')"
           deb_version="$(sed -n 's/^DEB_VERSION[[:space:]]*=[[:space:]]*//p' Makefile | head -1 | tr -d '[:space:]')"
@@ -203,11 +205,11 @@ jobs:
           } > debian/changelog
           mkdir -p dist
           dpkg-buildpackage -S -us -uc
-          shopt -s nullglob
-          for f in "../apt-downgrade_${pkg_version}"*; do
+          # POSIX: no depender de nullglob
+          for f in ../apt-downgrade_"${pkg_version}"*; do
+            [ -e "$f" ] || continue
             mv -f "$f" dist/
           done
-          shopt -u nullglob
           test -f "dist/apt-downgrade_${pkg_version}.dsc"
           grep -q "Distribution: ${{ matrix.distro }}" "dist/apt-downgrade_${pkg_version}_source.changes"
           cp /tmp/changelog.bak debian/changelog
