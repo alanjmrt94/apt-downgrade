@@ -1,7 +1,7 @@
 # Makefile para apt-downgrade
 
 PACKAGE_NAME = apt-downgrade
-VERSION = 1.0.0
+VERSION = 1.1.0
 DEB_VERSION = 1
 FULL_VERSION = $(VERSION)-$(DEB_VERSION)
 
@@ -21,10 +21,10 @@ PARENT_DIR = ..
 
 # Compilador
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -Wall -Wextra -O2 -DAPT_DOWNGRADE_VERSION=\"$(VERSION)\"
 LDFLAGS =
 
-SOURCES = $(SRC_DIR)/main.c
+SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/i18n.c
 TARGET = $(BUILD_DIR)/$(PACKAGE_NAME)
 
 PREFIX ?= /usr
@@ -106,6 +106,7 @@ package: clean-build build
 	@install -m 644 man/$(PACKAGE_NAME).1 $(BUILD_DIR)/package/usr/share/man/man1/
 	@gzip -9n -f $(BUILD_DIR)/package/usr/share/man/man1/$(PACKAGE_NAME).1
 	@install -m 644 README.md $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/
+	@install -m 644 README-es.md $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/
 	@install -m 644 $(DEBIAN_DIR)/copyright $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/
 	@install -m 644 $(DEBIAN_DIR)/changelog $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/changelog.Debian
 	@gzip -9n -f $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/changelog.Debian

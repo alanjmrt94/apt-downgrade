@@ -1,3 +1,5 @@
+#include "i18n.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,24 +7,40 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#ifndef APT_DOWNGRADE_VERSION
+#define APT_DOWNGRADE_VERSION "1.1.0"
+#endif
+
 typedef struct {
     char name[256];
     char distribution[256];
 } PackageInfo;
 
+static Lang g_lang = LANG_EN;
+static const Messages *g_msg = NULL;
+
+static void init_lang(void) {
+    g_lang = i18n_detect_lang();
+    g_msg = i18n_messages(g_lang);
+}
+
 static void print_usage(FILE *out, const char *program) {
-    fprintf(out,
-            "Uso: %s --current <version_actual> --downgrade <version_objetivo> [opciones]\n"
-            "\n"
-            "Opciones:\n"
-            "  -h, --help       Mostrar esta ayuda\n"
-            "  --dry-run        Listar y mostrar el comando sin instalar\n"
-            "  -y, --yes        Confirmar automáticamente la instalación\n"
-            "\n"
-            "Notas:\n"
-            "  Listar y --dry-run no requieren sudo.\n"
-            "  La instalación sí requiere privilegios de root (sudo).\n",
-            program);
+    fprintf(out, "apt-downgrade %s\n", APT_DOWNGRADE_VERSION);
+    fprintf(out, "%s\n\n", g_msg->blurb);
+    fprintf(out, g_msg->usage, program);
+    fprintf(out, "\n%s\n", g_msg->options_header);
+    fprintf(out, "%s\n", g_msg->opt_current);
+    fprintf(out, "%s\n", g_msg->opt_downgrade);
+    fprintf(out, "%s\n", g_msg->opt_dry_run);
+    fprintf(out, "%s\n", g_msg->opt_yes);
+    fprintf(out, "%s\n", g_msg->opt_help);
+    fprintf(out, "\n%s\n", g_msg->examples_header);
+    fprintf(out, "  %s --current 1.2.3-1 --downgrade 1.0.0-1 --dry-run\n", program);
+    fprintf(out, "  sudo %s --current 1.2.3-1 --downgrade 1.0.0-1\n", program);
+    fprintf(out, "\n%s\n", g_msg->notes_header);
+    fprintf(out, "%s\n", g_msg->note_list);
+    fprintf(out, "%s\n", g_msg->note_root);
+    fprintf(out, "\n%s\n", g_msg->more_info);
 }
 
 static void add_package(PackageInfo **packages, size_t *count, size_t *capacity,
@@ -31,7 +49,7 @@ static void add_package(PackageInfo **packages, size_t *count, size_t *capacity,
         *capacity = 8;
         *packages = malloc(*capacity * sizeof(PackageInfo));
         if (!*packages) {
-            fprintf(stderr, "Error: memoria insuficiente.\n");
+            fprintf(stderr, "%s", g_msg->err_oom);
             exit(EXIT_FAILURE);
         }
     } else if (*count == *capacity) {
@@ -39,7 +57,7 @@ static void add_package(PackageInfo **packages, size_t *count, size_t *capacity,
         PackageInfo *tmp = realloc(*packages, *capacity * sizeof(PackageInfo));
         if (!tmp) {
             free(*packages);
-            fprintf(stderr, "Error: memoria insuficiente.\n");
+            fprintf(stderr, "%s", g_msg->err_oom);
             exit(EXIT_FAILURE);
         }
         *packages = tmp;
@@ -54,11 +72,6 @@ static void add_package(PackageInfo **packages, size_t *count, size_t *capacity,
     (*count)++;
 }
 
-/* Parsea una línea de `apt list --installed`.
- * Formatos soportados:
- *   pkg/suite,now VERSION arch [flags]
- *   pkg/suite1,suite2,now VERSION arch [flags]
- */
 static int parse_line(const char *line, PackageInfo **packages, size_t *count,
                       size_t *capacity, const char *target_version) {
     const char *slash = strchr(line, '/');
@@ -71,7 +84,7 @@ static int parse_line(const char *line, PackageInfo **packages, size_t *count,
         return 0;
     }
 
-    const char *version_start = now_marker + 5; /* después de ",now " */
+    const char *version_start = now_marker + 5;
     const char *space_after_version = strchr(version_start, ' ');
     if (!space_after_version) {
         return 0;
@@ -115,7 +128,7 @@ static char *build_command(const PackageInfo *packages, size_t count,
     size_t buffer_size = 64;
     char *command = malloc(buffer_size);
     if (!command) {
-        fprintf(stderr, "Error: memoria insuficiente.\n");
+        fprintf(stderr, "%s", g_msg->err_oom);
         exit(EXIT_FAILURE);
     }
     strcpy(command, "apt install");
@@ -123,13 +136,13 @@ static char *build_command(const PackageInfo *packages, size_t count,
 
     for (size_t i = 0; i < count; ++i) {
         size_t addition =
-            strlen(packages[i].name) + strlen(downgrade_version) + 4; /* " pkg=ver" */
+            strlen(packages[i].name) + strlen(downgrade_version) + 4;
         if (current_len + addition + 1 >= buffer_size) {
             buffer_size = (current_len + addition + 1) * 2;
             char *tmp = realloc(command, buffer_size);
             if (!tmp) {
                 free(command);
-                fprintf(stderr, "Error: memoria insuficiente.\n");
+                fprintf(stderr, "%s", g_msg->err_oom);
                 exit(EXIT_FAILURE);
             }
             command = tmp;
@@ -146,19 +159,21 @@ static int confirm_install(int assume_yes) {
         return 1;
     }
 
-    printf("\n¿Desea proceder? (s/N): ");
+    printf("%s", g_msg->confirm_prompt);
     fflush(stdout);
 
     char response[8];
     if (!fgets(response, sizeof(response), stdin)) {
-        fprintf(stderr, "Error al leer la respuesta.\n");
+        fprintf(stderr, "%s", g_msg->err_read_answer);
         return -1;
     }
 
-    return tolower((unsigned char)response[0]) == 's' ? 1 : 0;
+    return i18n_is_affirmative(g_lang, (unsigned char)response[0]) ? 1 : 0;
 }
 
 int main(int argc, char *argv[]) {
+    init_lang();
+
     const char *current_version = NULL;
     const char *downgrade_version = NULL;
     int dry_run = 0;
@@ -187,7 +202,6 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    /* Permite inyectar un comando de listado en tests (p. ej. cat fixture). */
     const char *list_cmd = getenv("APT_DOWNGRADE_LIST_CMD");
     if (!list_cmd || list_cmd[0] == '\0') {
         list_cmd = "apt list --installed 2>/dev/null";
@@ -195,7 +209,7 @@ int main(int argc, char *argv[]) {
 
     FILE *fp = popen(list_cmd, "r");
     if (!fp) {
-        fprintf(stderr, "Error: no se pudo obtener la lista de paquetes instalados.\n");
+        fprintf(stderr, "%s", g_msg->err_list_open);
         return EXIT_FAILURE;
     }
 
@@ -208,7 +222,6 @@ int main(int argc, char *argv[]) {
         if (strncmp(line, "Listing", 7) == 0 || line[0] == '\n' || line[0] == '\0') {
             continue;
         }
-        /* Quitar salto de línea final para parsing estable */
         size_t len = strlen(line);
         if (len > 0 && line[len - 1] == '\n') {
             line[len - 1] = '\0';
@@ -218,29 +231,28 @@ int main(int argc, char *argv[]) {
 
     int list_status = pclose(fp);
     if (list_status == -1) {
-        fprintf(stderr, "Error: falló al cerrar el listado de paquetes.\n");
+        fprintf(stderr, "%s", g_msg->err_list_close);
         free(packages);
         return EXIT_FAILURE;
     }
 
     if (count == 0) {
-        printf("No se encontraron paquetes con la versión %s.\n", current_version);
+        printf(g_msg->no_packages, current_version);
         free(packages);
         return EXIT_SUCCESS;
     }
 
-    printf("Paquetes que coinciden con la versión actual %s (%zu):\n", current_version,
-           count);
+    printf(g_msg->packages_header, current_version, count);
     for (size_t i = 0; i < count; ++i) {
         printf("  - %s (%s)\n", packages[i].name, packages[i].distribution);
     }
-    printf("\nVersión objetivo para downgrade: %s\n", downgrade_version);
+    printf(g_msg->target_version, downgrade_version);
 
     char *command = build_command(packages, count, downgrade_version);
-    printf("\nComando a ejecutar:\n  sudo %s\n", command);
+    printf(g_msg->command_header, command);
 
     if (dry_run) {
-        printf("\nModo dry-run: no se realizaron cambios.\n");
+        printf("%s", g_msg->dry_run_done);
         free(command);
         free(packages);
         return EXIT_SUCCESS;
@@ -253,37 +265,44 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
     if (confirmed == 0) {
-        printf("Operación cancelada por el usuario.\n");
+        printf("%s", g_msg->cancelled);
         free(command);
         free(packages);
         return EXIT_SUCCESS;
     }
 
-    if (geteuid() != 0) {
-        fprintf(stderr,
-                "Error: la instalación requiere privilegios de root. "
-                "Ejecutá con sudo o usá --dry-run.\n");
-        free(command);
-        free(packages);
-        return EXIT_FAILURE;
+    /* Tests en CI suelen correr como root; APT_DOWNGRADE_FORCE_NONROOT simula no-root. */
+    {
+        const char *force_nonroot = getenv("APT_DOWNGRADE_FORCE_NONROOT");
+        int is_root = (geteuid() == 0);
+        if (force_nonroot != NULL && force_nonroot[0] != '\0' &&
+            strcmp(force_nonroot, "0") != 0) {
+            is_root = 0;
+        }
+        if (!is_root) {
+            fprintf(stderr, "%s", g_msg->err_root);
+            free(command);
+            free(packages);
+            return EXIT_FAILURE;
+        }
     }
 
     int status = system(command);
     if (status == -1) {
-        fprintf(stderr, "Error al ejecutar el comando.\n");
+        fprintf(stderr, "%s", g_msg->err_exec);
         free(command);
         free(packages);
         return EXIT_FAILURE;
     }
 
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-        printf("Comando ejecutado correctamente.\n");
+        printf("%s", g_msg->success);
         free(command);
         free(packages);
         return EXIT_SUCCESS;
     }
 
-    fprintf(stderr, "El comando terminó con estado %d.\n", WEXITSTATUS(status));
+    fprintf(stderr, g_msg->err_status, WEXITSTATUS(status));
     free(command);
     free(packages);
     return EXIT_FAILURE;
