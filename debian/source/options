@@ -1,0 +1,13 @@
+# Excluir del tarball fuente (PPA / dpkg-buildpackage -S).
+# El repo git puede tener más; Launchpad solo necesita lo del build.
+tar-ignore = .git
+tar-ignore = .github
+tar-ignore = .cursor
+tar-ignore = .vscode
+tar-ignore = .idea
+tar-ignore = dist
+tar-ignore = build
+tar-ignore = scripts
+tar-ignore = tests
+tar-ignore = *.deb
+tar-ignore = *.upload

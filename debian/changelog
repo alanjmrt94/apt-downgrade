@@ -1,3 +1,13 @@
+apt-downgrade (1.1.0-1) resolute; urgency=medium
+
+  * Multi-language UI: en (default), es, pt/pt_BR, fr, de, it, ru,
+    zh_CN/zh_TW, ja, ko, ar, hi, nl, pl, tr, gl, ca, eu.
+  * Follows system locale with English fallback; APT_DOWNGRADE_LANG override.
+  * Improved help output; README in English and Spanish (README-es.md).
+  * Helper scripts: build-deb, test-language, run-phasing-test.
+
+ -- alanjmrt94 <alanjmartinez94@gmail.com>  Wed, 07 Oct 2026 23:15:00 -0300
+
 apt-downgrade (1.0.0-1) resolute; urgency=medium
 
   * Initial release.
