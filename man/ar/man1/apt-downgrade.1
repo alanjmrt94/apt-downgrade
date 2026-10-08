@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "أوامر المستخدم"
+.SH الاسم
+apt-downgrade \- تخفيض الحزم المثبتة إلى إصدار مستهدف
+.SH الملخص
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH الوصف
+.B apt-downgrade
+يعرض الحزم المثبتة التي تطابق إصداراً بدقة
+(\fB\-\-current\fR), ثم يقترح أمر
+.B apt install
+تثبيت هذه الحزم على
+.IR target .
+.PP
+العرض و
+.B \-\-dry\-run
+/
+.B \-\-json
+لا يتطلبان صلاحيات الجذر. تطبيق التثبيت يتطلب صلاحيات الجذر.
+.SH الخيارات
+.TP
+.BR \-h ", " \-\-help
+عرض معلومات الاستخدام.
+.TP
+.B \-\-current \fIversion\fR
+الإصدار المثبت للمطابقة (مطابقة تامة).
+.TP
+.B \-\-downgrade \fItarget\fR
+الإصدار الهدف لأمر apt install المُنشأ.
+.TP
+.B \-\-dry\-run
+عرض الحزم المطابقة والأمر دون تثبيت.
+.TP
+.B \-\-json
+إخراج الخطة بصيغة JSON على stdout (يتضمن dry-run؛ المفاتيح بالإنجليزية).
+.TP
+.BR \-y ", " \-\-yes
+تخطي التأكيد التفاعلي.
+.SH حالة الخروج
+.TP
+.B 0
+نجاح أو إلغاء من المستخدم أو لا حزم مطابقة.
+.TP
+.B 1
+وسائط غير صالحة أو فشل القائمة أو قراءة التأكيد أو غياب الجذر أو فشل apt.
+.SH البيئة
+.TP
+.B APT_DOWNGRADE_LANG
+فرض لغة الواجهة (أمثلة:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+إن لم تُضبط، تتبع اللغة LANGUAGE ثم LC_ALL ثم LC_MESSAGES ثم LANG. غير المدعوم: الإنجليزية.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+تجاوز أمر سرد الحزم المثبتة (أساساً للاختبارات).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+إن كانت قيمة غير فارغة غير 0، يُفترض أن العملية ليست جذراً (اختبارات الحاويات).
+.SH أمثلة
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH انظر أيضاً
+.BR apt (8),
+.BR dpkg (1)
+.SH المؤلف
+alanjmrt94 <alanjmartinez94@gmail.com>

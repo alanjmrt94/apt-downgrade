@@ -1,5 +1,7 @@
 # apt-downgrade
 
+[![CI](https://github.com/alanjmrt94/apt-downgrade/actions/workflows/ci.yml/badge.svg)](https://github.com/alanjmrt94/apt-downgrade/actions/workflows/ci.yml)
+
 [Español](README-es.md)
 
 Command-line tool to downgrade packages on Ubuntu/Debian.
@@ -8,7 +10,7 @@ It finds installed packages matching an exact version (`--current`) and builds a
 `apt install package=version` command for the target version (`--downgrade`),
 with interactive confirmation.
 
-**Version:** 1.1.0 — multi-language UI (system locale, English fallback).
+**Version:** 1.2.0 — multi-language UI, `--json` plan output, localized man pages.
 
 ## Usage
 
@@ -18,6 +20,9 @@ apt-downgrade --help
 
 # Simulate (no sudo required)
 apt-downgrade --current <current_version> --downgrade <target_version> --dry-run
+
+# Machine-readable plan (implies dry-run)
+apt-downgrade --current <current_version> --downgrade <target_version> --json
 
 # Apply (sudo only needed to install)
 sudo apt-downgrade --current <current_version> --downgrade <target_version>
@@ -56,7 +61,7 @@ make test           # fixture tests (does not modify the system)
 ./scripts/ci-check-metadata.sh
 make install        # install to /usr/bin (use DESTDIR=... for staging)
 make uninstall
-make package        # creates dist/apt-downgrade_1.1.0-1_amd64.deb
+make package        # creates dist/apt-downgrade_1.2.0-1_amd64.deb
 make deb            # debhelper binary package → dist/
 make deb-src        # source package → dist/
 make sign           # sign the .changes in dist/
@@ -83,7 +88,7 @@ It does **not** upload to the PPA (use `make ppa-series-upload` locally with you
 Install the local `.deb` (only if you want):
 
 ```bash
-sudo dpkg -i dist/apt-downgrade_1.1.0-1_amd64.deb
+sudo dpkg -i dist/apt-downgrade_1.2.0-1_amd64.deb
 ```
 
 ### Language
@@ -125,7 +130,7 @@ apt-downgrade/
 │   ├── compat          # 12 (Ubuntu 20.04+)
 │   ├── copyright
 │   └── source/…        # format + options (PPA tar excludes)
-├── man/apt-downgrade.1
+├── man/                # en + localized man1 pages (es, pt, ja, …)
 ├── scripts/
 │   ├── ci-check-metadata.sh           # CI
 │   └── ppa-release-series.sh          # maintainer PPA upload
@@ -154,7 +159,7 @@ Packaging targets **Ubuntu 20.04 (focal) through 26.x (resolute)**:
 
 - `Build-Depends: debhelper (>= 12)` (available since focal).
 - On the PPA, Launchpad **builds once per series** (each release uses its own libc).
-- Each series is published as `1.1.0-1~SERIES1` (e.g. `1.1.0-1~jammy1`).
+- Each series is published as `1.2.0-1~SERIES1` (e.g. `1.2.0-1~jammy1`).
 
 ## PPA: Ubuntu Tools
 

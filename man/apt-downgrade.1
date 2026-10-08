@@ -1,4 +1,4 @@
-.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.1.0" "User Commands"
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "User Commands"
 .SH NAME
 apt-downgrade \- downgrade installed packages to a target version
 .SH SYNOPSIS
@@ -6,6 +6,7 @@ apt-downgrade \- downgrade installed packages to a target version
 \fB\-\-current\fR \fIversion\fR
 \fB\-\-downgrade\fR \fItarget\fR
 [\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
 [\fB\-y\fR|\fB\-\-yes\fR]
 .SH DESCRIPTION
 .B apt-downgrade
@@ -17,6 +18,8 @@ command pinning those packages to
 .PP
 Listing and
 .B \-\-dry\-run
+/
+.B \-\-json
 do not require root. Applying the install requires root privileges.
 .SH OPTIONS
 .TP
@@ -31,6 +34,9 @@ Target version for the generated apt install command.
 .TP
 .B \-\-dry\-run
 Show matching packages and the command without installing.
+.TP
+.B \-\-json
+Emit the plan as JSON on stdout (implies dry-run; English keys).
 .TP
 .BR \-y ", " \-\-yes
 Skip the interactive confirmation prompt.
@@ -70,6 +76,7 @@ pretend the process is not root (used by automated tests in containers).
 .SH EXAMPLES
 .nf
 apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
 sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
 .fi
 .SH SEE ALSO

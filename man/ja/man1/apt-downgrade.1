@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "ユーザーコマンド"
+.SH 名前
+apt-downgrade \- インストール済みパッケージを対象バージョンへダウングレードする
+.SH 書式
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH 説明
+.B apt-downgrade
+指定バージョンに正確に一致するインストール済みパッケージを一覧し
+(\fB\-\-current\fR), それらのパッケージを
+.B apt install
+に固定する
+.IR target .
+.PP
+一覧と
+.B \-\-dry\-run
+/
+.B \-\-json
+は root 不要です。インストールの適用には root 権限が必要です。
+.SH オプション
+.TP
+.BR \-h ", " \-\-help
+使い方を表示します。
+.TP
+.B \-\-current \fIversion\fR
+一致させるインストール済みバージョン（完全一致）。
+.TP
+.B \-\-downgrade \fItarget\fR
+生成する apt install コマンドの対象バージョン。
+.TP
+.B \-\-dry\-run
+一致するパッケージとコマンドを表示し、インストールしません。
+.TP
+.B \-\-json
+計画を JSON で stdout に出力します（dry-run を含意。キーは英語）。
+.TP
+.BR \-y ", " \-\-yes
+対話確認を省略します。
+.SH 終了ステータス
+.TP
+.B 0
+成功、ユーザーによるキャンセル、または一致するパッケージなし。
+.TP
+.B 1
+引数不正、一覧失敗、確認読み取り失敗、root 不足、または apt 失敗。
+.SH 環境変数
+.TP
+.B APT_DOWNGRADE_LANG
+UI 言語を強制（例:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+未設定時は LANGUAGE、LC_ALL、LC_MESSAGES、LANG の順。未対応ロケールは英語。
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+パッケージ一覧コマンドを上書き（主にテスト用）。
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+空でない 0 以外の値なら非 root として扱う（コンテナ上の自動テスト用）。
+.SH 例
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH 関連項目
+.BR apt (8),
+.BR dpkg (1)
+.SH 作者
+alanjmrt94 <alanjmartinez94@gmail.com>

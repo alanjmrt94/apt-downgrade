@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Órdenes de usuario"
+.SH NOMBRE
+apt-downgrade \- bajar paquetes instalados a una versión objetivo
+.SH SINOPSIS
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH DESCRIPCIÓN
+.B apt-downgrade
+lista los paquetes instalados que coinciden exactamente con una versión
+(\fB\-\-current\fR), y propone un comando
+.B apt install
+fijando esos paquetes a
+.IR target .
+.PP
+Listar y
+.B \-\-dry\-run
+/
+.B \-\-json
+no requieren root. Aplicar la instalación requiere privilegios de root.
+.SH OPCIONES
+.TP
+.BR \-h ", " \-\-help
+Mostrar información de uso.
+.TP
+.B \-\-current \fIversion\fR
+Versión instalada a buscar (coincidencia exacta).
+.TP
+.B \-\-downgrade \fItarget\fR
+Versión objetivo del comando apt install generado.
+.TP
+.B \-\-dry\-run
+Mostrar paquetes coincidentes y el comando sin instalar.
+.TP
+.B \-\-json
+Emitir el plan en JSON por stdout (implica dry-run; claves en inglés).
+.TP
+.BR \-y ", " \-\-yes
+Omitir la confirmación interactiva.
+.SH CÓDIGOS DE SALIDA
+.TP
+.B 0
+Éxito, cancelación del usuario o sin paquetes coincidentes.
+.TP
+.B 1
+Argumentos inválidos, fallo al listar, fallo al leer confirmación, falta de root o fallo de apt.
+.SH ENTORNO
+.TP
+.B APT_DOWNGRADE_LANG
+Forzar idioma de la interfaz (ejemplos:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Si no está definido, el idioma sigue LANGUAGE, LC_ALL, LC_MESSAGES y luego LANG. Locales no soportados: inglés.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Sobrescribe el comando de listado de paquetes (principalmente para tests).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Si tiene un valor no vacío distinto de 0, simula que el proceso no es root (tests en contenedores).
+.SH EJEMPLOS
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH VÉASE TAMBIÉN
+.BR apt (8),
+.BR dpkg (1)
+.SH AUTOR
+alanjmrt94 <alanjmartinez94@gmail.com>

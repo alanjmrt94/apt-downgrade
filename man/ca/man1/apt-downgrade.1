@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Ordres d'usuari"
+.SH NOM
+apt-downgrade \- baixar paquets instal·lats a una versió objectiu
+.SH SINOPSI
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH DESCRIPCIÓ
+.B apt-downgrade
+llista els paquets instal·lats que coincideixen exactament amb una versió
+(\fB\-\-current\fR), i proposa una ordre
+.B apt install
+fixant aquests paquets a
+.IR target .
+.PP
+Llistar i
+.B \-\-dry\-run
+/
+.B \-\-json
+no requereixen root. Aplicar la instal·lació requereix privilegis de root.
+.SH OPCIONS
+.TP
+.BR \-h ", " \-\-help
+Mostrar informació d'ús.
+.TP
+.B \-\-current \fIversion\fR
+Versió instal·lada a cercar (coincidència exacta).
+.TP
+.B \-\-downgrade \fItarget\fR
+Versió objectiu de l'ordre apt install generada.
+.TP
+.B \-\-dry\-run
+Mostrar paquets coincidents i l'ordre sense instal·lar.
+.TP
+.B \-\-json
+Emetre el pla en JSON per stdout (implica dry-run; claus en anglès).
+.TP
+.BR \-y ", " \-\-yes
+Ometre la confirmació interactiva.
+.SH CODIS DE SORTIDA
+.TP
+.B 0
+Èxit, cancel·lació de l'usuari o sense paquets coincidents.
+.TP
+.B 1
+Arguments invàlids, error en llistar, error en llegir confirmació, manca de root o error d'apt.
+.SH ENTORN
+.TP
+.B APT_DOWNGRADE_LANG
+Forçar l'idioma de la interfície (exemples:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Si no està definit, l'idioma segueix LANGUAGE, LC_ALL, LC_MESSAGES i després LANG. No suportats: anglès.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Sobreescriu l'ordre de llistat de paquets (principalment per a tests).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Si té un valor no buit distint de 0, simula que el procés no és root (tests en contenidors).
+.SH EXEMPLES
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH VEGEU TAMBÉ
+.BR apt (8),
+.BR dpkg (1)
+.SH AUTOR
+alanjmrt94 <alanjmartinez94@gmail.com>

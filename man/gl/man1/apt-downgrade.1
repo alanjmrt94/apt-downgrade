@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Ordes de usuario"
+.SH NOME
+apt-downgrade \- baixar paquetes instalados a unha versión obxectivo
+.SH SINOPSE
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH DESCRICIÓN
+.B apt-downgrade
+lista os paquetes instalados que coinciden exactamente cunha versión
+(\fB\-\-current\fR), e propón un comando
+.B apt install
+fixando eses paquetes a
+.IR target .
+.PP
+Listar e
+.B \-\-dry\-run
+/
+.B \-\-json
+non requiren root. Aplicar a instalación require privilexios de root.
+.SH OPCIÓNS
+.TP
+.BR \-h ", " \-\-help
+Mostrar información de uso.
+.TP
+.B \-\-current \fIversion\fR
+Versión instalada a buscar (coincidencia exacta).
+.TP
+.B \-\-downgrade \fItarget\fR
+Versión obxectivo do comando apt install xerado.
+.TP
+.B \-\-dry\-run
+Mostrar paquetes coincidentes e o comando sen instalar.
+.TP
+.B \-\-json
+Emitir o plan en JSON por stdout (implica dry-run; chaves en inglés).
+.TP
+.BR \-y ", " \-\-yes
+Omitir a confirmación interactiva.
+.SH CÓDIGOS DE SAÍDA
+.TP
+.B 0
+Éxito, cancelación do usuario ou sen paquetes coincidentes.
+.TP
+.B 1
+Argumentos inválidos, fallo ao listar, fallo ao ler confirmación, falta de root ou fallo de apt.
+.SH CONTORNO
+.TP
+.B APT_DOWNGRADE_LANG
+Forzar idioma da interface (exemplos:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Se non está definido, o idioma segue LANGUAGE, LC_ALL, LC_MESSAGES e logo LANG. Non soportados: inglés.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Substitúe o comando de listado de paquetes (principalmente para tests).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Se ten un valor non baleiro distinto de 0, simula que o proceso non é root (tests en contedores).
+.SH EXEMPLOS
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH VEXA TAMÉN
+.BR apt (8),
+.BR dpkg (1)
+.SH AUTOR
+alanjmrt94 <alanjmartinez94@gmail.com>

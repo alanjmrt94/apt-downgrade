@@ -1,5 +1,7 @@
 # apt-downgrade
 
+[![CI](https://github.com/alanjmrt94/apt-downgrade/actions/workflows/ci.yml/badge.svg)](https://github.com/alanjmrt94/apt-downgrade/actions/workflows/ci.yml)
+
 [English](README.md)
 
 Herramienta de línea de comandos para hacer downgrade de paquetes en Ubuntu/Debian.
@@ -8,7 +10,7 @@ Busca paquetes instalados con una versión exacta (`--current`) y arma un
 `apt install paquete=versión` hacia la versión objetivo (`--downgrade`), con
 confirmación interactiva.
 
-**Versión:** 1.1.0 — interfaz multilenguaje (locale del sistema, fallback inglés).
+**Versión:** 1.2.0 — UI multilenguaje, plan `--json`, man pages localizadas.
 
 ## Uso
 
@@ -18,6 +20,9 @@ apt-downgrade --help
 
 # Simular (no requiere sudo)
 apt-downgrade --current <version_actual> --downgrade <version_objetivo> --dry-run
+
+# Plan legible por máquinas (implica dry-run)
+apt-downgrade --current <version_actual> --downgrade <version_objetivo> --json
 
 # Aplicar (requiere sudo solo para instalar)
 sudo apt-downgrade --current <version_actual> --downgrade <version_objetivo>
@@ -56,7 +61,7 @@ make test           # tests con fixtures (sin tocar el sistema)
 ./scripts/ci-check-metadata.sh
 make install        # instala en /usr/bin (usar DESTDIR=... para staging)
 make uninstall
-make package        # genera dist/apt-downgrade_1.1.0-1_amd64.deb
+make package        # genera dist/apt-downgrade_1.2.0-1_amd64.deb
 make deb            # paquete binario con debhelper → dist/
 make deb-src        # paquete fuente → dist/
 make sign           # firma el .changes en dist/
@@ -83,7 +88,7 @@ No sube al PPA (eso sigue siendo `make ppa-series-upload` en local con tu GPG).
 Instalar el `.deb` local (solo si lo querés):
 
 ```bash
-sudo dpkg -i dist/apt-downgrade_1.1.0-1_amd64.deb
+sudo dpkg -i dist/apt-downgrade_1.2.0-1_amd64.deb
 ```
 
 ### Idioma
@@ -125,7 +130,7 @@ apt-downgrade/
 │   ├── compat          # 12 (Ubuntu 20.04+)
 │   ├── copyright
 │   └── source/…        # format + options (exclusiones del tarball PPA)
-├── man/apt-downgrade.1
+├── man/                # man1 en + localizadas (es, pt, ja, …)
 ├── scripts/
 │   ├── ci-check-metadata.sh           # CI
 │   └── ppa-release-series.sh          # subida PPA (maintainer)
@@ -154,7 +159,7 @@ El código y el empaquetado apuntan a **Ubuntu 20.04 (focal) hasta 26.x (resolut
 
 - `Build-Depends: debhelper (>= 12)` (disponible desde focal).
 - En el PPA, Launchpad **compila una vez por serie** (el binario de cada release usa su propia libc).
-- Cada serie se publica con versión `1.1.0-1~SERIE1` (ej. `1.1.0-1~jammy1`).
+- Cada serie se publica con versión `1.2.0-1~SERIE1` (ej. `1.2.0-1~jammy1`).
 
 ## PPA: Ubuntu Tools
 

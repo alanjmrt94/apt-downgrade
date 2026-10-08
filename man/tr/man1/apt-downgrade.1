@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Kullanıcı komutları"
+.SH AD
+apt-downgrade \- kurulu paketleri hedef sürüme düşürme
+.SH ÖZET
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH AÇIKLAMA
+.B apt-downgrade
+bir sürümle tam eşleşen kurulu paketleri listeler
+(\fB\-\-current\fR), ve bu paketleri
+.B apt install
+sürümüne sabitleyen bir
+.IR target .
+.PP
+Listeleme ve
+.B \-\-dry\-run
+/
+.B \-\-json
+root gerektirmez. Kurulumu uygulamak root ayrıcalığı ister.
+.SH SEÇENEKLER
+.TP
+.BR \-h ", " \-\-help
+Kullanım bilgisini göster.
+.TP
+.B \-\-current \fIversion\fR
+Eşleştirilecek kurulu sürüm (tam eşleşme).
+.TP
+.B \-\-downgrade \fItarget\fR
+Oluşturulan apt install komutunun hedef sürümü.
+.TP
+.B \-\-dry\-run
+Eşleşen paketleri ve komutu göster, kurma.
+.TP
+.B \-\-json
+Planı JSON olarak stdout'a yaz (dry-run ima eder; anahtarlar İngilizce).
+.TP
+.BR \-y ", " \-\-yes
+Etkileşimli onayı atla.
+.SH ÇIKIŞ DURUMU
+.TP
+.B 0
+Başarı, kullanıcı iptali veya eşleşen paket yok.
+.TP
+.B 1
+Geçersiz argümanlar, liste hatası, onay okuma hatası, root yok veya apt hatası.
+.SH ORTAM
+.TP
+.B APT_DOWNGRADE_LANG
+Arayüz dilini zorla (örnekler:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Ayarlı değilse dil LANGUAGE, LC_ALL, LC_MESSAGES, sonra LANG. Desteklenmeyen: İngilizce.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Paket listeleme komutunu geçersiz kılar (çoğunlukla testler için).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Boş olmayan ve 0 olmayan değerde süreç root değilmiş gibi davran (kapsayıcı testleri).
+.SH ÖRNEKLER
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH AYRICA BAKINIZ
+.BR apt (8),
+.BR dpkg (1)
+.SH YAZAR
+alanjmrt94 <alanjmartinez94@gmail.com>

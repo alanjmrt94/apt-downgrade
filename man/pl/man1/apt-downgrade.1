@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Polecenia użytkownika"
+.SH NAZWA
+apt-downgrade \- obniżanie zainstalowanych pakietów do wersji docelowej
+.SH SKŁADNIA
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH OPIS
+.B apt-downgrade
+wypisuje zainstalowane pakiety dokładnie pasujące do wersji
+(\fB\-\-current\fR), i proponuje polecenie
+.B apt install
+przypinające te pakiety do
+.IR target .
+.PP
+Listowanie oraz
+.B \-\-dry\-run
+/
+.B \-\-json
+nie wymagają root. Zastosowanie instalacji wymaga uprawnień root.
+.SH OPCJE
+.TP
+.BR \-h ", " \-\-help
+Pokaż informacje o użyciu.
+.TP
+.B \-\-current \fIversion\fR
+Zainstalowana wersja do dokładnego dopasowania.
+.TP
+.B \-\-downgrade \fItarget\fR
+Docelowa wersja wygenerowanego polecenia apt install.
+.TP
+.B \-\-dry\-run
+Pokaż pasujące pakiety i polecenie bez instalacji.
+.TP
+.B \-\-json
+Wypisz plan jako JSON na stdout (implikuje dry-run; klucze po angielsku).
+.TP
+.BR \-y ", " \-\-yes
+Pomiń interaktywne potwierdzenie.
+.SH KODY ZAKOŃCZENIA
+.TP
+.B 0
+Sukces, anulowanie przez użytkownika lub brak dopasowań.
+.TP
+.B 1
+Nieprawidłowe argumenty, błąd listowania, błąd odczytu potwierdzenia, brak root lub błąd apt.
+.SH ŚRODOWISKO
+.TP
+.B APT_DOWNGRADE_LANG
+Wymuś język interfejsu (przykłady:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Jeśli nieustawione, język bierze z LANGUAGE, LC_ALL, LC_MESSAGES, potem LANG. Nieobsługiwane: angielski.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Nadpisuje polecenie listowania pakietów (głównie do testów).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Przy niepustej wartości innej niż 0 udaje, że proces nie jest root (testy w kontenerach).
+.SH PRZYKŁADY
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH ZOBACZ TAKŻE
+.BR apt (8),
+.BR dpkg (1)
+.SH AUTOR
+alanjmrt94 <alanjmartinez94@gmail.com>

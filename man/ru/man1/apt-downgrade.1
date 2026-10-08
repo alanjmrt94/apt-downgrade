@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Команды пользователя"
+.SH ИМЯ
+apt-downgrade \- понизить установленные пакеты до целевой версии
+.SH СИНТАКСИС
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH ОПИСАНИЕ
+.B apt-downgrade
+перечисляет установленные пакеты, точно совпадающие с версией
+(\fB\-\-current\fR), и предлагает команду
+.B apt install
+фиксируя эти пакеты на
+.IR target .
+.PP
+Список и
+.B \-\-dry\-run
+/
+.B \-\-json
+не требуют root. Установка требует привилегий root.
+.SH ПАРАМЕТРЫ
+.TP
+.BR \-h ", " \-\-help
+Показать справку.
+.TP
+.B \-\-current \fIversion\fR
+Установленная версия для точного совпадения.
+.TP
+.B \-\-downgrade \fItarget\fR
+Целевая версия для сгенерированной команды apt install.
+.TP
+.B \-\-dry\-run
+Показать совпадающие пакеты и команду без установки.
+.TP
+.B \-\-json
+Вывести план в JSON в stdout (подразумевает dry-run; ключи на английском).
+.TP
+.BR \-y ", " \-\-yes
+Пропустить интерактивное подтверждение.
+.SH КОДЫ ЗАВЕРШЕНИЯ
+.TP
+.B 0
+Успех, отмена пользователем или нет совпадающих пакетов.
+.TP
+.B 1
+Неверные аргументы, ошибка списка, ошибка чтения подтверждения, нет root или сбой apt.
+.SH ОКРУЖЕНИЕ
+.TP
+.B APT_DOWNGRADE_LANG
+Принудительный язык интерфейса (примеры:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Если не задано, язык берётся из LANGUAGE, LC_ALL, LC_MESSAGES, затем LANG. Неподдерживаемые локали: английский.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Переопределяет команду списка пакетов (в основном для тестов).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Если задано непустое значение, отличное от 0, имитирует отсутствие root (тесты в контейнерах).
+.SH ПРИМЕРЫ
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH СМ. ТАКЖЕ
+.BR apt (8),
+.BR dpkg (1)
+.SH АВТОР
+alanjmrt94 <alanjmartinez94@gmail.com>

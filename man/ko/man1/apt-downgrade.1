@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "사용자 명령"
+.SH 이름
+apt-downgrade \- 설치된 패키지를 대상 버전으로 다운그레이드
+.SH 요약
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH 설명
+.B apt-downgrade
+지정한 버전과 정확히 일치하는 설치된 패키지를 나열한 뒤
+(\fB\-\-current\fR), 해당 패키지를
+.B apt install
+으로 고정하는
+.IR target .
+.PP
+목록 조회와
+.B \-\-dry\-run
+/
+.B \-\-json
+는 root가 필요 없습니다. 설치 적용에는 root 권한이 필요합니다.
+.SH 옵션
+.TP
+.BR \-h ", " \-\-help
+사용법을 표시합니다.
+.TP
+.B \-\-current \fIversion\fR
+일치시킬 설치 버전(정확한 일치).
+.TP
+.B \-\-downgrade \fItarget\fR
+생성되는 apt install 명령의 대상 버전.
+.TP
+.B \-\-dry\-run
+일치하는 패키지와 명령을 표시하고 설치하지 않습니다.
+.TP
+.B \-\-json
+계획을 JSON으로 stdout에 출력합니다(dry-run 포함, 키는 영어).
+.TP
+.BR \-y ", " \-\-yes
+대화형 확인을 건너뜁니다.
+.SH 종료 상태
+.TP
+.B 0
+성공, 사용자 취소, 또는 일치하는 패키지 없음.
+.TP
+.B 1
+잘못된 인수, 목록 실패, 확인 읽기 실패, root 부족 또는 apt 실패.
+.SH 환경 변수
+.TP
+.B APT_DOWNGRADE_LANG
+UI 언어 강제(예:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+미설정 시 LANGUAGE, LC_ALL, LC_MESSAGES, LANG 순. 미지원 로케일은 영어.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+설치된 패키지 목록 명령을 덮어씁니다(주로 테스트용).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+비어 있지 않고 0이 아니면 프로세스가 root가 아닌 것처럼 취급(컨테이너 테스트용).
+.SH 예제
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH 관련 항목
+.BR apt (8),
+.BR dpkg (1)
+.SH 작성자
+alanjmrt94 <alanjmartinez94@gmail.com>

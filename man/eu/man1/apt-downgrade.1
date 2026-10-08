@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Erabiltzaile-komandoak"
+.SH IZENA
+apt-downgrade \- instalatutako paketeak helburu-bertsiora jaitsi
+.SH LABURPENA
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH DESKRIBAPENA
+.B apt-downgrade
+bertsio batekin zehazki bat datozen instalatutako paketeak zerrendatzen ditu
+(\fB\-\-current\fR), eta
+.B apt install
+komando bat proposatzen du pakete horiek
+.IR target .
+.PP
+Zerrendatzeak eta
+.B \-\-dry\-run
+/
+.B \-\-json
+ez dute root behar. Instalazioa aplikatzeko root baimenak behar dira.
+.SH AUKERAK
+.TP
+.BR \-h ", " \-\-help
+Erabilera-informazioa erakutsi.
+.TP
+.B \-\-current \fIversion\fR
+Bilatu beharreko instalatutako bertsioa (bat-etortze zehatza).
+.TP
+.B \-\-downgrade \fItarget\fR
+Sortutako apt install komandoaren helburu-bertsioa.
+.TP
+.B \-\-dry\-run
+Erakutsi bat datozen paketeak eta komandoa, instalatu gabe.
+.TP
+.B \-\-json
+Plana JSON gisa stdout-era idatzi (dry-run inplikatzen du; gakoak ingelesez).
+.TP
+.BR \-y ", " \-\-yes
+Saltatu berrespen interaktiboa.
+.SH IRTEERA-KODEA
+.TP
+.B 0
+Arrakasta, erabiltzailearen utzitzea edo bat datozen paketerik ez.
+.TP
+.B 1
+Argumentu baliogabeak, zerrenda-errorea, berrespena irakurtzeko errorea, root falta edo apt errorea.
+.SH INGURUNEA
+.TP
+.B APT_DOWNGRADE_LANG
+Interfaze-hizkuntza behartu (adibideak:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Ezarri gabe badago, hizkuntzak LANGUAGE, LC_ALL, LC_MESSAGES eta LANG jarraitzen ditu. Onartu gabekoak: ingelesa.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Pakete-zerrendako komandoa gainidazten du (batez ere testetarako).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Hutsik ez den eta 0 ez den balioarekin, prozesua root ez balitz bezala (edukiontzietako testak).
+.SH ADIBIDEAK
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH IKUS ERE
+.BR apt (8),
+.BR dpkg (1)
+.SH EGILEA
+alanjmrt94 <alanjmartinez94@gmail.com>

@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "使用者命令"
+.SH 名稱
+apt-downgrade \- 將已安裝套件降級到目標版本
+.SH Synopsis
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH 描述
+.B apt-downgrade
+列出與指定版本精確符合的已安裝套件
+(\fB\-\-current\fR), 並產生
+.B apt install
+命令，將這些套件固定到
+.IR target .
+.PP
+列出與
+.B \-\-dry\-run
+/
+.B \-\-json
+不需要 root。執行安裝需要 root 權限。
+.SH 選項
+.TP
+.BR \-h ", " \-\-help
+顯示用法資訊。
+.TP
+.B \-\-current \fIversion\fR
+要精確符合的已安裝版本。
+.TP
+.B \-\-downgrade \fItarget\fR
+產生的 apt install 命令的目標版本。
+.TP
+.B \-\-dry\-run
+顯示符合的套件與命令，但不安裝。
+.TP
+.B \-\-json
+將計畫以 JSON 輸出到 stdout（隱含 dry-run；鍵名為英語）。
+.TP
+.BR \-y ", " \-\-yes
+略過互動式確認。
+.SH 結束狀態
+.TP
+.B 0
+成功、使用者取消或沒有符合的套件。
+.TP
+.B 1
+參數無效、列出失敗、讀取確認失敗、缺少 root 或 apt 失敗。
+.SH 環境變數
+.TP
+.B APT_DOWNGRADE_LANG
+強制介面語言（例如：
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+未設定時，語言依序遵循 LANGUAGE、LC_ALL、LC_MESSAGES、LANG。不支援的地區設定回退到英語。
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+覆寫用於列出已安裝套件的命令（主要用於測試）。
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+若設為非空且不為 0，則假裝程序不是 root（容器中的自動測試）。
+.SH 範例
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH 參見
+.BR apt (8),
+.BR dpkg (1)
+.SH 作者
+alanjmrt94 <alanjmartinez94@gmail.com>

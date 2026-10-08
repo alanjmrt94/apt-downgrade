@@ -1,0 +1,78 @@
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.2.0" "Gebruikersopdrachten"
+.SH NAAM
+apt-downgrade \- geïnstalleerde pakketten downgraden naar een doelversie
+.SH SAMENVATTING
+.B apt-downgrade
+\fB\-\-current\fR \fIversion\fR
+\fB\-\-downgrade\fR \fItarget\fR
+[\fB\-\-dry\-run\fR]
+[\fB\-\-json\fR]
+[\fB\-y\fR|\fB\-\-yes\fR]
+.SH BESCHRIJVING
+.B apt-downgrade
+lijst geïnstalleerde pakketten die exact overeenkomen met een versie
+(\fB\-\-current\fR), en stelt een
+.B apt install
+commando voor dat die pakketten vastzet op
+.IR target .
+.PP
+Lijsten en
+.B \-\-dry\-run
+/
+.B \-\-json
+vereisen geen root. Installeren vereist rootrechten.
+.SH OPTIES
+.TP
+.BR \-h ", " \-\-help
+Toon gebruiksinfo.
+.TP
+.B \-\-current \fIversion\fR
+Geïnstalleerde versie om exact te matchen.
+.TP
+.B \-\-downgrade \fItarget\fR
+Doelversie voor het gegenereerde apt install-commando.
+.TP
+.B \-\-dry\-run
+Toon overeenkomende pakketten en het commando zonder te installeren.
+.TP
+.B \-\-json
+Plan als JSON naar stdout (impliceert dry-run; sleutels in het Engels).
+.TP
+.BR \-y ", " \-\-yes
+Sla de interactieve bevestiging over.
+.SH EXITSTATUS
+.TP
+.B 0
+Succes, annulering door de gebruiker, of geen overeenkomsten.
+.TP
+.B 1
+Ongeldige argumenten, lijstfout, leesfout bij bevestiging, geen root of apt-fout.
+.SH OMGEVING
+.TP
+.B APT_DOWNGRADE_LANG
+Forceer UI-taal (voorbeelden:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+Indien niet gezet, volgt de taal LANGUAGE, LC_ALL, LC_MESSAGES en dan LANG. Niet-ondersteund: Engels.
+.TP
+.B APT_DOWNGRADE_LIST_CMD
+Overschrijft het pakketlijst-commando (vooral voor tests).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+Bij een niet-lege waarde ongelijk aan 0 doen alsof het proces geen root is (containertests).
+.SH VOORBEELDEN
+.nf
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
+apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-json
+sudo apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1
+.fi
+.SH ZIE OOK
+.BR apt (8),
+.BR dpkg (1)
+.SH AUTEUR
+alanjmrt94 <alanjmartinez94@gmail.com>
