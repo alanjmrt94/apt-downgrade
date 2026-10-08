@@ -15,4 +15,9 @@ override_dh_auto_install:
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/apt-downgrade PREFIX=/usr
 
 override_dh_auto_test:
-	$(MAKE) test
+	@# tests/ no va en el tarball PPA; CI/git sí lo tienen.
+	@if [ -x tests/run_tests.sh ]; then \
+		$(MAKE) test; \
+	else \
+		echo "Skipping tests (not present in source package)"; \
+	fi
