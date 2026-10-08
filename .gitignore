@@ -27,16 +27,20 @@ debian/tmp/
 /tmp/
 *.log
 
-# Editor e IDE
+# Editor e IDE (nunca al remoto)
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
 .DS_Store
 
-# Cursor (local)
-.cursor/
+# Helpers locales (no CI): se quedan en disco, no se pushean
+scripts/build-deb.sh
+tests/test-language.sh
+tests/run-phasing-test.sh
+tests/manual-phasing-downgrade.txt
 
 # Entorno
 .env
