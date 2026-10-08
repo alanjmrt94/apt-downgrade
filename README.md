@@ -1,117 +1,149 @@
 # apt-downgrade
 
-Herramienta de línea de comandos para hacer downgrade de paquetes en Ubuntu/Debian.
+[Español](README-es.md)
 
-Busca paquetes instalados con una versión exacta (`--current`) y arma un
-`apt install paquete=versión` hacia la versión objetivo (`--downgrade`), con
-confirmación interactiva.
+Command-line tool to downgrade packages on Ubuntu/Debian.
 
-## Uso
+It finds installed packages matching an exact version (`--current`) and builds an
+`apt install package=version` command for the target version (`--downgrade`),
+with interactive confirmation.
+
+**Version:** 1.1.0 — multi-language UI (system locale, English fallback).
+
+## Usage
 
 ```bash
-# Ayuda
+# Help
 apt-downgrade --help
 
-# Simular (no requiere sudo)
-apt-downgrade --current <version_actual> --downgrade <version_objetivo> --dry-run
+# Simulate (no sudo required)
+apt-downgrade --current <current_version> --downgrade <target_version> --dry-run
 
-# Aplicar (requiere sudo solo para instalar)
-sudo apt-downgrade --current <version_actual> --downgrade <version_objetivo>
+# Apply (sudo only needed to install)
+sudo apt-downgrade --current <current_version> --downgrade <target_version>
 
-# Confirmar automáticamente
-sudo apt-downgrade --current <version_actual> --downgrade <version_objetivo> --yes
+# Auto-confirm
+sudo apt-downgrade --current <current_version> --downgrade <target_version> --yes
 ```
 
-### Flujo
+### Flow
 
-1. Lista paquetes con `apt list --installed` (no requiere root).
-2. Filtra los que coinciden exactamente con `--current`.
-3. Muestra resumen (nombre, distribución) y el comando `apt install ...`.
-4. Con `--dry-run` termina sin cambios.
-5. Sin dry-run, pide confirmación (`s/N`) salvo que uses `--yes`.
-6. La instalación exige root; si no hay privilegios, falla con un mensaje claro.
+1. Lists packages with `apt list --installed` (no root required).
+2. Filters packages that match `--current` exactly.
+3. Shows a summary (name, distribution) and the `apt install ...` command.
+4. With `--dry-run`, exits without changes.
+5. Otherwise asks for confirmation (`y/N`) unless `--yes` is used.
+6. Installing requires root; if privileges are missing, it fails with a clear message.
 
-Si no hay coincidencias, finaliza sin cambios.
+If there are no matches, it exits without changes.
 
-## Desarrollo local
+## Local development
 
-### Requisitos
+### Requirements
 
 ```bash
 sudo apt update
 sudo apt install build-essential debhelper
-# Para firmar y subir al PPA:
+# To sign and upload to the PPA:
 sudo apt install devscripts dput
 ```
 
-### Compilar, testear e instalar
+### Build, test, install
 
 ```bash
-make build          # binario en build/apt-downgrade
-make test           # tests con fixtures (sin tocar el sistema)
+make build          # binary in build/apt-downgrade
+make test           # fixture tests (does not modify the system)
 ./scripts/ci-check-metadata.sh
-make install        # instala en /usr/bin (usar DESTDIR=... para staging)
+make install        # install to /usr/bin (use DESTDIR=... for staging)
 make uninstall
-make package        # genera dist/apt-downgrade_1.0.0-1_amd64.deb
-make deb            # paquete binario con debhelper → dist/
-make deb-src        # paquete fuente → dist/
-make sign           # firma el .changes en dist/
+make package        # creates dist/apt-downgrade_1.1.0-1_amd64.deb
+make deb            # debhelper binary package → dist/
+make deb-src        # source package → dist/
+make sign           # sign the .changes in dist/
+
 ```
 
-Los artefactos (`.deb`, `.changes`, `.buildinfo`, `.dsc`, …) quedan en `dist/` (gitignore).
+Artifacts (`.deb`, `.changes`, `.buildinfo`, `.dsc`, …) go under `dist/` (gitignored).
+
+Local-only helpers (gitignored; not pushed): `scripts/build-deb.sh`,
+`tests/test-language.sh`, `tests/run-phasing-test.sh`. Keep them on your machine
+for manual checks; CI uses `make test` / `scripts/ci-check-metadata.sh` only.
 
 ### CI (GitHub Actions)
 
-En cada push/PR a `main` corre:
+On every push/PR to `main`:
 
-1. **Lint & metadata** — `shellcheck`, `bash -n`, consistencia VERSION/changelog/LICENSE  
-2. **Build/test** — matriz `gcc`/`clang` × Ubuntu 22.04/24.04 con `-Werror`, tests y dry-run real  
-3. **Package & lintian** — `make package`, build con `debhelper`, paquete fuente, artefactos  
-4. **Distro matrix** — contenedores `focal`…`resolute`: build, test, `.deb` y source `~serie1`  
+1. **Lint & metadata** — `shellcheck`, `bash -n`, VERSION/changelog/LICENSE consistency  
+2. **Build/test** — `gcc`/`clang` × Ubuntu 22.04/24.04 with `-Werror`, tests and real dry-run  
+3. **Package & lintian** — `make package`, `debhelper` build, source package, artifacts  
+4. **Distro matrix** — containers `focal`…`resolute`: build, test, `.deb`, and `~series1` source  
 
-No sube al PPA (eso sigue siendo `make ppa-series-upload` en local con tu GPG).
+It does **not** upload to the PPA (use `make ppa-series-upload` locally with your GPG key).
 
-Instalar el `.deb` local (solo si lo querés):
+Install the local `.deb` (only if you want):
 
 ```bash
-sudo dpkg -i dist/apt-downgrade_1.0.0-1_amd64.deb
+sudo dpkg -i dist/apt-downgrade_1.1.0-1_amd64.deb
 ```
 
-### Variable de entorno (tests)
+### Language
 
-`APT_DOWNGRADE_LIST_CMD` permite reemplazar el comando de listado (por defecto
-`apt list --installed 2>/dev/null`). Los tests usan `cat` sobre un fixture.
+Follows the system locale (`LANGUAGE` → `LC_ALL` → `LC_MESSAGES` → `LANG`).
+Unsupported locales fall back to **English**.
 
-## Estructura
+Force a language:
+
+```bash
+APT_DOWNGRADE_LANG=es apt-downgrade --help
+APT_DOWNGRADE_LANG=pt_BR apt-downgrade --help
+APT_DOWNGRADE_LANG=zh_TW apt-downgrade --help
+```
+
+Supported: `en` (default), `es`, `pt`, `pt_BR`, `fr`, `de`, `it`, `ru`,
+`zh_CN`, `zh_TW`, `ja`, `ko`, `ar`, `hi`, `nl`, `pl`, `tr`, `gl`, `ca`, `eu`.
+
+### Test environment variable
+
+`APT_DOWNGRADE_LIST_CMD` overrides the installed-package listing command (default
+`apt list --installed 2>/dev/null`). Tests use `cat` on a fixture.
+
+## Layout
 
 ```
 apt-downgrade/
-├── src/main.c
+├── src/
+│   ├── main.c
+│   ├── i18n.c
+│   └── i18n.h
 ├── tests/
-│   ├── fixtures/apt-list-sample.txt
-│   └── run_tests.sh
+│   ├── fixtures/apt-list-sample.txt   # CI
+│   └── run_tests.sh                   # CI
 ├── debian/
 │   ├── control
 │   ├── rules
 │   ├── changelog
 │   ├── compat          # 12 (Ubuntu 20.04+)
 │   ├── copyright
-│   └── source/format
+│   └── source/…        # format + options (PPA tar excludes)
 ├── man/apt-downgrade.1
 ├── scripts/
-│   ├── ppa-release-series.sh
-│   └── ci-check-metadata.sh
-├── .github/workflows/ci.yml
+│   ├── ci-check-metadata.sh           # CI
+│   └── ppa-release-series.sh          # maintainer PPA upload
+├── .github/workflows/ci.yml           # GitHub Actions (not in PPA tarball)
 ├── Makefile
 ├── LICENSE
-└── README.md
+├── README.md           # English
+└── README-es.md        # Español
 ```
 
-## Compatibilidad Ubuntu 20.04–26.x
+PPA source tarball excludes `.github/`, `.cursor/`, `dist/`, `build/`, `scripts/`,
+and `tests/` (see `debian/source/options`).
 
-El código y el empaquetado apuntan a **Ubuntu 20.04 (focal) hasta 26.x (resolute)**:
+## Ubuntu 20.04–26.x compatibility
 
-| Ubuntu | Serie |
+Packaging targets **Ubuntu 20.04 (focal) through 26.x (resolute)**:
+
+| Ubuntu | Series |
 |--------|--------|
 | 20.04 LTS | `focal` |
 | 22.04 LTS | `jammy` |
@@ -120,49 +152,49 @@ El código y el empaquetado apuntan a **Ubuntu 20.04 (focal) hasta 26.x (resolut
 | 25.10 | `questing` |
 | 26.04 LTS | `resolute` |
 
-- `Build-Depends: debhelper (>= 12)` (disponible desde focal).
-- En el PPA, Launchpad **compila una vez por serie** (el binario de cada release usa su propia libc).
-- Cada serie se publica con versión `1.0.0-1~SERIE1` (ej. `1.0.0-1~jammy1`).
+- `Build-Depends: debhelper (>= 12)` (available since focal).
+- On the PPA, Launchpad **builds once per series** (each release uses its own libc).
+- Each series is published as `1.1.0-1~SERIES1` (e.g. `1.1.0-1~jammy1`).
 
 ## PPA: Ubuntu Tools
 
 PPA: **[ppa:alanjmrt94/ubuntu-tools](https://launchpad.net/~alanjmrt94/+archive/ubuntu/ubuntu-tools)**
 
 - Maintainer: `alanjmrt94 <alanjmartinez94@gmail.com>`
-- Firma GPG: `5077A813F9AE818752168EA173140C59FF3EBE5D`  
+- GPG signing key: `5077A813F9AE818752168EA173140C59FF3EBE5D`  
   (`_shared-keys/launchpad/ubuntu-tools.env`)
 
-### Publicar en todas las series (recomendado)
+### Publish to all series (recommended)
 
 ```bash
 sudo apt install devscripts dput
 
-# Generar + firmar para focal jammy noble plucky questing resolute
+# Build + sign for focal jammy noble plucky questing resolute
 make ppa-series
 
-# Firmar y subir todo al PPA
+# Sign and upload everything to the PPA
 make ppa-series-upload
 ```
 
-Subconjunto:
+Subset:
 
 ```bash
 SERIES="jammy noble resolute" make ppa-series-upload
 ```
 
-### Publicar solo la serie del changelog (ej. resolute)
+### Publish only the changelog series (e.g. resolute)
 
 ```bash
 make deb-src
 make sign
 make upload
-# o: make ppa-release
+# or: make ppa-release
 ```
 
-Seguí los builds en:  
+Track builds at:  
 https://launchpad.net/~alanjmrt94/+archive/ubuntu/ubuntu-tools
 
-Instalar:
+Install:
 
 ```bash
 sudo add-apt-repository ppa:alanjmrt94/ubuntu-tools
@@ -170,18 +202,18 @@ sudo apt update
 sudo apt install apt-downgrade
 ```
 
-### Actualizar
+### Update
 
-Bump `VERSION` / `DEB_VERSION` en el `Makefile` (y alineá `debian/changelog`),
-luego `make ppa-series-upload`.
+Bump `VERSION` / `DEB_VERSION` in the `Makefile` (and align `debian/changelog`),
+then `make ppa-series-upload`.
 
 ## Maintainer vs Debian Developer
 
-Sos maintainer del paquete con el campo `Maintainer:` en `debian/control`.
-Eso alcanza para el PPA. Ser Debian Developer oficial es otro proceso y **no**
-es necesario: https://www.debian.org/devel/join/newmaint
+You are the package maintainer via the `Maintainer:` field in `debian/control`.
+That is enough for the PPA. Being an official Debian Developer is a separate
+process and is **not** required: https://www.debian.org/devel/join/newmaint
 
-## Notas
+## Notes
 
-- Los tests **nunca** ejecutan un downgrade real.
-- No ejecutes `make upload` / `dput` hasta haber firmado el `.changes`.
+- Automated tests **never** perform a real downgrade.
+- Do not run `make upload` / `dput` until the `.changes` file is signed.

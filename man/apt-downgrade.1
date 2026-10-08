@@ -1,4 +1,4 @@
-.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.0.0" "User Commands"
+.TH APT-DOWNGRADE 1 "October 2026" "apt-downgrade 1.1.0" "User Commands"
 .SH NAME
 apt-downgrade \- downgrade installed packages to a target version
 .SH SYNOPSIS
@@ -43,8 +43,30 @@ Success, cancellation by the user, or no matching packages.
 Invalid arguments, failed listing, failed confirmation read, missing root for install, or apt failure.
 .SH ENVIRONMENT
 .TP
+.B APT_DOWNGRADE_LANG
+Force UI language (examples:
+.BR en ,
+.BR es ,
+.BR pt_BR ,
+.BR fr ,
+.BR de ,
+.BR zh_CN ,
+.BR ja ).
+If unset, the language follows
+.BR LANGUAGE ,
+.BR LC_ALL ,
+.BR LC_MESSAGES ,
+then
+.BR LANG .
+Unsupported locales fall back to English.
+.TP
 .B APT_DOWNGRADE_LIST_CMD
 Override the command used to list installed packages (mainly for tests).
+.TP
+.B APT_DOWNGRADE_FORCE_NONROOT
+If set to a non-empty value other than
+.BR 0 ,
+pretend the process is not root (used by automated tests in containers).
 .SH EXAMPLES
 .nf
 apt\-downgrade \-\-current 1.2.3\-1 \-\-downgrade 1.0.0\-1 \-\-dry\-run
