@@ -32,6 +32,7 @@ typedef struct {
     const char *opt_current;
     const char *opt_downgrade;
     const char *opt_dry_run;
+    const char *opt_json;
     const char *opt_yes;
     const char *opt_help;
     const char *examples_header;

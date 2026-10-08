@@ -1,7 +1,7 @@
 # Makefile para apt-downgrade
 
 PACKAGE_NAME = apt-downgrade
-VERSION = 1.1.0
+VERSION = 1.2.0
 DEB_VERSION = 1
 FULL_VERSION = $(VERSION)-$(DEB_VERSION)
 
@@ -105,6 +105,12 @@ package: clean-build build
 	@strip --strip-unneeded $(BUILD_DIR)/package/usr/bin/$(PACKAGE_NAME)
 	@install -m 644 man/$(PACKAGE_NAME).1 $(BUILD_DIR)/package/usr/share/man/man1/
 	@gzip -9n -f $(BUILD_DIR)/package/usr/share/man/man1/$(PACKAGE_NAME).1
+	@for loc in es pt pt_BR fr de it ru zh_CN zh_TW ja ko ar hi nl pl tr gl ca eu; do \
+		install -d -m 755 $(BUILD_DIR)/package/usr/share/man/$$loc/man1; \
+		install -m 644 man/$$loc/man1/$(PACKAGE_NAME).1 \
+			$(BUILD_DIR)/package/usr/share/man/$$loc/man1/; \
+		gzip -9n -f $(BUILD_DIR)/package/usr/share/man/$$loc/man1/$(PACKAGE_NAME).1; \
+	done
 	@install -m 644 README.md $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/
 	@install -m 644 README-es.md $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/
 	@install -m 644 $(DEBIAN_DIR)/copyright $(BUILD_DIR)/package/usr/share/doc/$(PACKAGE_NAME)/

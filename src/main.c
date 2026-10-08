@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #ifndef APT_DOWNGRADE_VERSION
-#define APT_DOWNGRADE_VERSION "1.1.0"
+#define APT_DOWNGRADE_VERSION "1.2.0"
 #endif
 
 typedef struct {
@@ -32,15 +32,70 @@ static void print_usage(FILE *out, const char *program) {
     fprintf(out, "%s\n", g_msg->opt_current);
     fprintf(out, "%s\n", g_msg->opt_downgrade);
     fprintf(out, "%s\n", g_msg->opt_dry_run);
+    fprintf(out, "%s\n", g_msg->opt_json);
     fprintf(out, "%s\n", g_msg->opt_yes);
     fprintf(out, "%s\n", g_msg->opt_help);
     fprintf(out, "\n%s\n", g_msg->examples_header);
     fprintf(out, "  %s --current 1.2.3-1 --downgrade 1.0.0-1 --dry-run\n", program);
+    fprintf(out, "  %s --current 1.2.3-1 --downgrade 1.0.0-1 --json\n", program);
     fprintf(out, "  sudo %s --current 1.2.3-1 --downgrade 1.0.0-1\n", program);
     fprintf(out, "\n%s\n", g_msg->notes_header);
     fprintf(out, "%s\n", g_msg->note_list);
     fprintf(out, "%s\n", g_msg->note_root);
     fprintf(out, "\n%s\n", g_msg->more_info);
+}
+
+static void json_escape_print(FILE *out, const char *s) {
+    fputc('"', out);
+    for (; *s; ++s) {
+        unsigned char c = (unsigned char)*s;
+        if (c == '"' || c == '\\') {
+            fputc('\\', out);
+            fputc((char)c, out);
+        } else if (c == '\n') {
+            fputs("\\n", out);
+        } else if (c == '\r') {
+            fputs("\\r", out);
+        } else if (c == '\t') {
+            fputs("\\t", out);
+        } else if (c < 0x20) {
+            fprintf(out, "\\u%04x", c);
+        } else {
+            fputc((char)c, out);
+        }
+    }
+    fputc('"', out);
+}
+
+static void print_json_plan(const PackageInfo *packages, size_t count,
+                            const char *current_version, const char *downgrade_version,
+                            const char *command) {
+    printf("{\n");
+    printf("  \"version\": \"%s\",\n", APT_DOWNGRADE_VERSION);
+    printf("  \"current\": ");
+    json_escape_print(stdout, current_version);
+    printf(",\n");
+    printf("  \"downgrade\": ");
+    json_escape_print(stdout, downgrade_version);
+    printf(",\n");
+    printf("  \"packages\": [\n");
+    for (size_t i = 0; i < count; ++i) {
+        printf("    {\n");
+        printf("      \"name\": ");
+        json_escape_print(stdout, packages[i].name);
+        printf(",\n");
+        printf("      \"distribution\": ");
+        json_escape_print(stdout, packages[i].distribution);
+        printf("\n    }%s\n", (i + 1 < count) ? "," : "");
+    }
+    printf("  ],\n");
+    printf("  \"command\": ");
+    if (command != NULL) {
+        json_escape_print(stdout, command);
+    } else {
+        fputs("null", stdout);
+    }
+    printf("\n}\n");
 }
 
 static void add_package(PackageInfo **packages, size_t *count, size_t *capacity,
@@ -177,6 +232,7 @@ int main(int argc, char *argv[]) {
     const char *current_version = NULL;
     const char *downgrade_version = NULL;
     int dry_run = 0;
+    int json_out = 0;
     int assume_yes = 0;
 
     for (int i = 1; i < argc; ++i) {
@@ -184,6 +240,9 @@ int main(int argc, char *argv[]) {
             print_usage(stdout, argv[0]);
             return EXIT_SUCCESS;
         } else if (strcmp(argv[i], "--dry-run") == 0) {
+            dry_run = 1;
+        } else if (strcmp(argv[i], "--json") == 0) {
+            json_out = 1;
             dry_run = 1;
         } else if (strcmp(argv[i], "--yes") == 0 || strcmp(argv[i], "-y") == 0) {
             assume_yes = 1;
@@ -237,7 +296,20 @@ int main(int argc, char *argv[]) {
     }
 
     if (count == 0) {
-        printf(g_msg->no_packages, current_version);
+        if (json_out) {
+            print_json_plan(NULL, 0, current_version, downgrade_version, NULL);
+        } else {
+            printf(g_msg->no_packages, current_version);
+        }
+        free(packages);
+        return EXIT_SUCCESS;
+    }
+
+    char *command = build_command(packages, count, downgrade_version);
+
+    if (json_out) {
+        print_json_plan(packages, count, current_version, downgrade_version, command);
+        free(command);
         free(packages);
         return EXIT_SUCCESS;
     }
@@ -247,8 +319,6 @@ int main(int argc, char *argv[]) {
         printf("  - %s (%s)\n", packages[i].name, packages[i].distribution);
     }
     printf(g_msg->target_version, downgrade_version);
-
-    char *command = build_command(packages, count, downgrade_version);
     printf(g_msg->command_header, command);
 
     if (dry_run) {
