@@ -22,7 +22,9 @@ PARENT_DIR = ..
 
 # Compilador
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -DAPT_DOWNGRADE_VERSION=\"$(VERSION)\"
+# ?= para respetar CFLAGS de dpkg-buildflags (-g, hardening) en `make deb`
+CFLAGS ?= -Wall -Wextra -O2
+CFLAGS += -DAPT_DOWNGRADE_VERSION=\"$(VERSION)\"
 LDFLAGS =
 
 SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/i18n.c
