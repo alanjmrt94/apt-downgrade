@@ -21,7 +21,7 @@ jobs:
     name: Lint & metadata
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install tools
         run: |
@@ -54,7 +54,7 @@ jobs:
         os: [ubuntu-22.04, ubuntu-24.04]
         compiler: [gcc, clang]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install toolchain
         run: |
@@ -72,8 +72,8 @@ jobs:
           ver="$(apt list --installed 2>/dev/null | awk -F' ' '/\/.*,now /{print $2; exit}')"
           echo "Using installed version: ${ver}"
           test -n "${ver}"
-          ./build/apt-downgrade --current "${ver}" --downgrade 0.0.0-ci --dry-run | tee /tmp/dry-run.txt
-          grep -q "Modo dry-run" /tmp/dry-run.txt
+          APT_DOWNGRADE_LANG=en ./build/apt-downgrade --current "${ver}" --downgrade 0.0.0-ci --dry-run | tee /tmp/dry-run.txt
+          grep -q "Dry-run mode" /tmp/dry-run.txt
           grep -q "sudo apt install" /tmp/dry-run.txt
 
   package:
@@ -81,7 +81,7 @@ jobs:
     needs: build-test
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install packaging tools
         run: |
@@ -111,10 +111,13 @@ jobs:
       - name: Source package (unsigned)
         run: |
           make deb-src
-          test -f dist/apt-downgrade_1.0.0-1.dsc
-          test -f dist/apt-downgrade_1.0.0-1.tar.xz
-          test -f dist/apt-downgrade_1.0.0-1_source.changes
-          grep -q "Distribution: resolute" dist/apt-downgrade_1.0.0-1_source.changes
+          ver="$(sed -n 's/^VERSION[[:space:]]*=[[:space:]]*//p' Makefile | head -1 | tr -d '[:space:]')"
+          deb_ver="$(sed -n 's/^DEB_VERSION[[:space:]]*=[[:space:]]*//p' Makefile | head -1 | tr -d '[:space:]')"
+          full="${ver}-${deb_ver}"
+          test -f "dist/apt-downgrade_${full}.dsc"
+          test -f "dist/apt-downgrade_${full}.tar.xz"
+          test -f "dist/apt-downgrade_${full}_source.changes"
+          grep -q "Distribution: resolute" "dist/apt-downgrade_${full}_source.changes"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -153,7 +156,7 @@ jobs:
       image: ${{ matrix.image }}
       options: --user root
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install build deps (${{ matrix.distro }})
         run: |
