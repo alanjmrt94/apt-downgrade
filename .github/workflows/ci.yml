@@ -31,12 +31,11 @@ jobs:
       - name: shellcheck
         run: |
           shellcheck --version
-          shellcheck -x tests/run_tests.sh scripts/ppa-release-series.sh scripts/ci-check-metadata.sh
+          shellcheck -x tests/run_tests.sh scripts/ci-check-metadata.sh
 
       - name: bash -n
         run: |
           bash -n tests/run_tests.sh
-          bash -n scripts/ppa-release-series.sh
           bash -n scripts/ci-check-metadata.sh
 
       - name: Metadata consistency

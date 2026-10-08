@@ -38,6 +38,7 @@ debian/tmp/
 
 # Helpers locales (no CI): se quedan en disco, no se pushean
 scripts/build-deb.sh
+scripts/ppa-release-series.sh
 tests/test-language.sh
 tests/run-phasing-test.sh
 tests/manual-phasing-downgrade.txt

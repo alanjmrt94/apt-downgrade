@@ -5,7 +5,8 @@ VERSION = 1.2.0
 DEB_VERSION = 1
 FULL_VERSION = $(VERSION)-$(DEB_VERSION)
 
-# PPA / firma (defaults; override con _shared-keys/launchpad/ubuntu-tools.env)
+# PPA / firma. Opcional: export SHARED_KEYS=/ruta/a/_shared-keys
+# (archivo launchpad/ubuntu-tools.env). Sin path absoluto en el repo.
 SHARED_KEYS ?=
 DEBSIGN_KEYID ?= 5077A813F9AE818752168EA173140C59FF3EBE5D
 LAUNCHPAD_PPA ?= ppa:alanjmrt94/ubuntu-tools
@@ -148,10 +149,10 @@ uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/$(PACKAGE_NAME)
 
 load-ppa-env:
-	@if [ -f "$(SHARED_KEYS)/launchpad/ubuntu-tools.env" ]; then \
+	@if [ -n "$(SHARED_KEYS)" ] && [ -f "$(SHARED_KEYS)/launchpad/ubuntu-tools.env" ]; then \
 		echo "Usando $(SHARED_KEYS)/launchpad/ubuntu-tools.env"; \
 	else \
-		echo "Aviso: no se encontró ubuntu-tools.env; usando defaults del Makefile"; \
+		echo "Aviso: SHARED_KEYS no apunta a ubuntu-tools.env; usando defaults del Makefile"; \
 	fi
 
 # Paquete fuente para Launchpad (sin firmar) → dist/
@@ -163,7 +164,7 @@ deb-src: clean-build load-ppa-env
 # Firmar .changes / .dsc en dist/ (pide passphrase de GPG si aplica)
 sign: load-ppa-env
 	@key="$(DEBSIGN_KEYID)"; \
-	if [ -f "$(SHARED_KEYS)/launchpad/ubuntu-tools.env" ]; then \
+	if [ -n "$(SHARED_KEYS)" ] && [ -f "$(SHARED_KEYS)/launchpad/ubuntu-tools.env" ]; then \
 		set -a; . "$(SHARED_KEYS)/launchpad/ubuntu-tools.env"; set +a; \
 		key="$$DEBSIGN_KEYID"; \
 	fi; \
@@ -181,7 +182,7 @@ sign: load-ppa-env
 # Subir al PPA (requiere firma previa)
 upload: load-ppa-env
 	@ppa="$(LAUNCHPAD_PPA)"; \
-	if [ -f "$(SHARED_KEYS)/launchpad/ubuntu-tools.env" ]; then \
+	if [ -n "$(SHARED_KEYS)" ] && [ -f "$(SHARED_KEYS)/launchpad/ubuntu-tools.env" ]; then \
 		set -a; . "$(SHARED_KEYS)/launchpad/ubuntu-tools.env"; set +a; \
 		ppa="$$LAUNCHPAD_PPA"; \
 	fi; \
@@ -197,13 +198,22 @@ upload: load-ppa-env
 ppa-release: deb-src sign upload
 
 # Todas las series 20.04–26.x: genera y firma (sin subir)
+# Requiere scripts/ppa-release-series.sh (local-only, no está en el remoto).
 ppa-series:
+	@test -f scripts/ppa-release-series.sh || { \
+		echo "Falta scripts/ppa-release-series.sh (helper local, no versionado)."; \
+		exit 1; \
+	}
 	@chmod +x scripts/ppa-release-series.sh
 	SERIES="$(PPA_SERIES)" VERSION="$(VERSION)" DEB_VERSION="$(DEB_VERSION)" \
-		./scripts/ppa-release-series.sh
+		SHARED_KEYS="$(SHARED_KEYS)" ./scripts/ppa-release-series.sh
 
 # Todas las series: firma y sube al PPA
 ppa-series-upload:
+	@test -f scripts/ppa-release-series.sh || { \
+		echo "Falta scripts/ppa-release-series.sh (helper local, no versionado)."; \
+		exit 1; \
+	}
 	@chmod +x scripts/ppa-release-series.sh
 	SERIES="$(PPA_SERIES)" VERSION="$(VERSION)" DEB_VERSION="$(DEB_VERSION)" \
-		UPLOAD=1 ./scripts/ppa-release-series.sh
+		SHARED_KEYS="$(SHARED_KEYS)" UPLOAD=1 ./scripts/ppa-release-series.sh

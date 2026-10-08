@@ -71,7 +71,8 @@ make sign           # firma el .changes en dist/
 Los artefactos (`.deb`, `.changes`, `.buildinfo`, `.dsc`, …) quedan en `dist/` (gitignore).
 
 Helpers solo locales (gitignore; no se pushean): `scripts/build-deb.sh`,
-`tests/test-language.sh`, `tests/run-phasing-test.sh`. El CI usa `make test` /
+`scripts/ppa-release-series.sh`, `tests/test-language.sh`,
+`tests/run-phasing-test.sh`. El CI usa `make test` /
 `scripts/ci-check-metadata.sh`.
 
 ### CI (GitHub Actions)
@@ -132,8 +133,7 @@ apt-downgrade/
 │   └── source/…        # format + options (exclusiones del tarball PPA)
 ├── man/                # man1 en + localizadas (es, pt, ja, …)
 ├── scripts/
-│   ├── ci-check-metadata.sh           # CI
-│   └── ppa-release-series.sh          # subida PPA (maintainer)
+│   └── ci-check-metadata.sh           # CI (ppa-release-series.sh solo local)
 ├── .github/workflows/ci.yml           # GitHub Actions (no va en el tarball PPA)
 ├── Makefile
 ├── LICENSE
@@ -166,13 +166,17 @@ El código y el empaquetado apuntan a **Ubuntu 20.04 (focal) hasta 26.x (resolut
 PPA: **[ppa:alanjmrt94/ubuntu-tools](https://launchpad.net/~alanjmrt94/+archive/ubuntu/ubuntu-tools)**
 
 - Maintainer: `alanjmrt94 <alanjmartinez94@gmail.com>`
-- Firma GPG: `5077A813F9AE818752168EA173140C59FF3EBE5D`  
-  (`_shared-keys/launchpad/ubuntu-tools.env`)
+- Firma GPG: `5077A813F9AE818752168EA173140C59FF3EBE5D`
+- Env opcional: `export SHARED_KEYS=/ruta/a/_shared-keys`  
+  (carga `launchpad/ubuntu-tools.env` si existe; sin paths absolutos en el repo)
 
 ### Publicar en todas las series (recomendado)
 
+Requiere el helper local `scripts/ppa-release-series.sh` (gitignore).
+
 ```bash
 sudo apt install devscripts dput
+export SHARED_KEYS=/ruta/a/_shared-keys   # opcional
 
 # Generar + firmar para focal jammy noble plucky questing resolute
 make ppa-series
