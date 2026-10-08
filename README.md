@@ -52,8 +52,13 @@ make test           # tests con fixtures (sin tocar el sistema)
 ./scripts/ci-check-metadata.sh
 make install        # instala en /usr/bin (usar DESTDIR=... para staging)
 make uninstall
-make package        # genera apt-downgrade_1.0.0-1_amd64.deb
+make package        # genera dist/apt-downgrade_1.0.0-1_amd64.deb
+make deb            # paquete binario con debhelper → dist/
+make deb-src        # paquete fuente → dist/
+make sign           # firma el .changes en dist/
 ```
+
+Los artefactos (`.deb`, `.changes`, `.buildinfo`, `.dsc`, …) quedan en `dist/` (gitignore).
 
 ### CI (GitHub Actions)
 
@@ -69,7 +74,7 @@ No sube al PPA (eso sigue siendo `make ppa-series-upload` en local con tu GPG).
 Instalar el `.deb` local (solo si lo querés):
 
 ```bash
-sudo dpkg -i apt-downgrade_1.0.0-1_amd64.deb
+sudo dpkg -i dist/apt-downgrade_1.0.0-1_amd64.deb
 ```
 
 ### Variable de entorno (tests)
