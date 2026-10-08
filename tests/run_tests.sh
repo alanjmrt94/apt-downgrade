@@ -86,6 +86,7 @@ assert_exit 0 "$BIN" --help
 assert_stdout_contains "apt-downgrade"
 assert_stdout_contains "Usage:"
 assert_stdout_contains "--dry-run"
+assert_stdout_contains "--json"
 assert_stdout_contains "Examples:"
 assert_stdout_contains "man apt-downgrade"
 
@@ -114,6 +115,21 @@ assert_stdout_contains "demo-tool=1.0.0-1"
 assert_stdout_contains "demo-lib=1.0.0-1"
 assert_stdout_contains "Dry-run mode"
 assert_stdout_contains "(2)"
+
+assert_exit 0 "$BIN" --current 1.2.3-1 --downgrade 1.0.0-1 --json
+assert_stdout_contains '"version":'
+assert_stdout_contains '"current": "1.2.3-1"'
+assert_stdout_contains '"downgrade": "1.0.0-1"'
+assert_stdout_contains '"name": "demo-tool"'
+assert_stdout_contains '"name": "demo-lib"'
+assert_stdout_contains '"command": "apt install'
+assert_stdout_contains 'demo-tool=1.0.0-1'
+assert_stdout_not_contains "Packages matching"
+assert_stdout_not_contains "Dry-run mode"
+
+assert_exit 0 "$BIN" --current 0.0.0-not-installed --downgrade 0.0.0-1 --json
+assert_stdout_contains '"packages": ['
+assert_stdout_contains '"command": null'
 
 assert_exit 0 "$BIN" --current 23.13.9-8ubuntu5.2 --downgrade 23.0.0 --dry-run
 assert_stdout_contains "accountsservice (resolute-updates,resolute-security)"
